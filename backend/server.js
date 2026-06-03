@@ -70,7 +70,7 @@ Example: [{"text":"Hello everyone","start":0,"duration":2.1},{"text":"Welcome ba
 Video URL: ${videoUrl}`;
 
   const response = await genAI.models.generateContent({
-    model: 'gemini-2.5-flash-preview-05-20',
+    model: 'gemini-2.5-flash',
     contents: prompt,
   });
   const raw = response.text.replace(/```json|```/g, '').trim();
