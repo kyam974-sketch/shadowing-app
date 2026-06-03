@@ -43,7 +43,13 @@ function extractVideoId(url) {
 }
 
 async function getTranscriptYoutube(videoId) {
-  const raw = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
+  // Prima prova con lang:'en', poi senza lang come fallback
+  let raw;
+  try {
+    raw = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
+  } catch (e) {
+    raw = await YoutubeTranscript.fetchTranscript(videoId);
+  }
   return raw.map(item => ({
     text: item.text.replace(/\n/g, ' ').trim(),
     start: Math.round(item.offset / 1000 * 10) / 10,
@@ -52,7 +58,7 @@ async function getTranscriptYoutube(videoId) {
 }
 
 async function getTranscriptGemini(videoUrl) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   const prompt = `You are a transcript extractor. Watch this YouTube video and produce a precise transcript in JSON format.
 Return ONLY a valid JSON array, no markdown, no explanation.
 Each element must have:
