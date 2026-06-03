@@ -12,7 +12,15 @@ const PORT = process.env.PORT || 3000;
 // ─── Clients ────────────────────────────────────────────────────────────────
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+// Supabase è opzionale — non crasha se le variabili mancano
+let supabase = null;
+if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  console.log('[supabase] Client initialized');
+} else {
+  console.warn('[supabase] Missing env vars — session save/load disabled');
+}
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
@@ -36,7 +44,7 @@ async function getTranscriptYoutube(videoId) {
   const raw = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
   return raw.map(item => ({
     text: item.text.replace(/\n/g, ' ').trim(),
-    start: Math.round(item.offset / 1000 * 10) / 10,  // secondi con 1 decimale
+    start: Math.round(item.offset / 1000 * 10) / 10,
     duration: Math.round(item.duration / 1000 * 10) / 10
   }));
 }
@@ -61,8 +69,11 @@ Video URL: ${videoUrl}`;
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  timestamp: new Date().toISOString(),
+  supabase: supabase ? 'connected' : 'not configured'
+}));
 
 // GET /api/transcript?url=...
 app.get('/api/transcript', async (req, res) => {
@@ -75,7 +86,6 @@ app.get('/api/transcript', async (req, res) => {
   let transcript = null;
   let source = null;
 
-  // Tentativo 1: youtube-transcript
   try {
     console.log(`[transcript] Trying youtube-transcript for ${videoId}...`);
     transcript = await getTranscriptYoutube(videoId);
@@ -85,7 +95,6 @@ app.get('/api/transcript', async (req, res) => {
     console.warn(`[transcript] ✗ youtube-transcript failed: ${err.message}`);
   }
 
-  // Fallback: Gemini
   if (!transcript) {
     try {
       console.log(`[transcript] Trying Gemini fallback...`);
@@ -103,7 +112,6 @@ app.get('/api/transcript', async (req, res) => {
 });
 
 // POST /api/exercises
-// Body: { transcript: [...], type: "fill_blank" | "dictation" | "loop_drill" }
 app.post('/api/exercises', async (req, res) => {
   const { transcript, type = 'fill_blank' } = req.body;
   if (!transcript || !Array.isArray(transcript)) {
@@ -120,15 +128,15 @@ For each exercise:
 - Provide the answer
 
 Return ONLY valid JSON, no markdown:
-{"exercises":[{"sentence":"I ___ to the store yesterday","blank":"went","context":"past simple - common verb"},...]}`  ,
+{"exercises":[{"sentence":"I ___ to the store yesterday","blank":"went","context":"past simple - common verb"},...]}`,
 
     dictation: `You are an English speaking coach. Select 6 short sentences from this transcript that are great for dictation practice (clear, natural, not too long).
 Return ONLY valid JSON, no markdown:
-{"exercises":[{"text":"Have you ever been to London?","difficulty":"easy"},...]}`  ,
+{"exercises":[{"text":"Have you ever been to London?","difficulty":"easy"},...]}`,
 
     loop_drill: `You are an English speaking coach. Identify 5 sentences or phrases from this transcript ideal for loop shadowing (rhythmically interesting, natural stress patterns, useful in real conversation).
 Return ONLY valid JSON, no markdown:
-{"exercises":[{"text":"I was wondering if you could help me","reason":"polite request pattern","stress_words":["wondering","help"]},...]}`
+{"exercises":[{"text":"I was wondering if you could help me","reason":"polite request pattern","stress_words":["wondering","help"]},...]}`,
   };
 
   try {
@@ -151,8 +159,9 @@ Return ONLY valid JSON, no markdown:
 });
 
 // POST /api/sessions
-// Body: { student_name, video_url, video_id, video_title, transcript, notes }
 app.post('/api/sessions', async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: 'Supabase not configured yet' });
+
   const { student_name, video_url, video_id, video_title, transcript, notes } = req.body;
   if (!student_name || !video_url) {
     return res.status(400).json({ error: 'Missing student_name or video_url' });
@@ -170,6 +179,8 @@ app.post('/api/sessions', async (req, res) => {
 
 // GET /api/sessions?student=...
 app.get('/api/sessions', async (req, res) => {
+  if (!supabase) return res.json({ sessions: [] });
+
   const { student } = req.query;
   let query = supabase.from('shadowing_sessions').select('*').order('created_at', { ascending: false });
   if (student) query = query.eq('student_name', student);
@@ -181,6 +192,8 @@ app.get('/api/sessions', async (req, res) => {
 
 // GET /api/students
 app.get('/api/students', async (req, res) => {
+  if (!supabase) return res.json({ students: [] });
+
   const { data, error } = await supabase
     .from('shadowing_sessions')
     .select('student_name')
