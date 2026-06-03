@@ -12,7 +12,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "youtube-transcript": "^1.2.1",
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "^0.7.0",
     "@anthropic-ai/sdk": "^0.36.3",
     "@supabase/supabase-js": "^2.39.0"
   },

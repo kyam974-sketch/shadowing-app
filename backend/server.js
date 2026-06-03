@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { YoutubeTranscript } = require('youtube-transcript');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Clients ────────────────────────────────────────────────────────────────
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Supabase è opzionale — non crasha se le variabili mancano
@@ -58,7 +58,6 @@ async function getTranscriptYoutube(videoId) {
 }
 
 async function getTranscriptGemini(videoUrl) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   const prompt = `You are a transcript extractor. Watch this YouTube video and produce a precise transcript in JSON format.
 Return ONLY a valid JSON array, no markdown, no explanation.
 Each element must have:
@@ -70,8 +69,11 @@ Example: [{"text":"Hello everyone","start":0,"duration":2.1},{"text":"Welcome ba
 
 Video URL: ${videoUrl}`;
 
-  const result = await model.generateContent([{ text: prompt }]);
-  const raw = result.response.text().replace(/```json|```/g, '').trim();
+  const response = await genAI.models.generateContent({
+    model: 'gemini-2.5-flash-preview-05-20',
+    contents: prompt,
+  });
+  const raw = response.text.replace(/```json|```/g, '').trim();
   return JSON.parse(raw);
 }
 
