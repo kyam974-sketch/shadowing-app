@@ -123,7 +123,13 @@ Video URL: ${videoUrl}`;
     contents: prompt,
   });
   const raw = response.text.replace(/```json|```/g, '').trim();
-  return JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+  // Normalizza i campi — Gemini a volte usa text_content, text_text, ecc.
+  return parsed.map(seg => ({
+    text: (seg.text || seg.text_content || seg.text_text || seg.content || seg.transcript || '').trim(),
+    start: typeof seg.start === 'number' ? seg.start : 0,
+    duration: typeof seg.duration === 'number' ? seg.duration : 2
+  })).filter(seg => seg.text);
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
