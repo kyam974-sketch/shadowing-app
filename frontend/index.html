@@ -1,1 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a35;
+    --accent: #e8ff47;
+    --accent2: #47ffe8;
+    --accent3: #ff6b47;
+    --text: #f0f0f5;
+    --text-dim: #7a7a8a;
+    --highlight-bg: rgba(232,255,71,0.15);
+    --highlight-border: #e8ff47;
+    --radius: 12px;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid noise background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+
+  .student-selector {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .student-selector label { font-size: 0.8rem; color: var(--text-dim); }
+  select, input[type=text] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+
+  /* ── URL bar ── */
+  .url-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .url-bar input {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  button {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    white-space: nowrap;
+  }
+  button:hover { opacity: 0.9; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+  button.danger { background: var(--accent3); }
+
+  /* ── Status ── */
+  .status {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .status.show { display: flex; }
+  .status.error { border-color: var(--accent3); color: var(--accent3); }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Main layout ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Video panel ── */
+  .video-panel { display: flex; flex-direction: column; gap: 16px; }
+
+  .video-wrapper {
+    position: relative;
+    padding-top: 56.25%;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .video-wrapper iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+  .video-placeholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    color: var(--text-dim);
+  }
+  .video-placeholder .ph-icon { font-size: 3rem; opacity: 0.3; }
+  .video-placeholder p { font-size: 0.85rem; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .speed-group {
+    display: flex; align-items: center; gap: 6px;
+    margin-left: auto;
+  }
+  .speed-group label { font-size: 0.78rem; color: var(--text-dim); }
+  .speed-btn {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .speed-btn.active {
+    background: var(--accent);
+    color: #0d0d0f;
+    border-color: var(--accent);
+  }
+
+  /* ── Transcript panel ── */
+  .transcript-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+  .source-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .source-badge.youtube { background: rgba(255,0,0,0.15); color: #ff6b6b; }
+  .source-badge.gemini  { background: rgba(71,255,232,0.15); color: var(--accent2); }
+
+  /* ── Transcript lines ── */
+  .transcript-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .transcript-line {
+    display: flex;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    align-items: flex-start;
+  }
+  .transcript-line:hover { background: var(--surface2); }
+  .transcript-line.active {
+    background: var(--highlight-bg);
+    border-left: 2px solid var(--highlight-border);
+  }
+  .line-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    min-width: 38px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .transcript-line.active .line-time { color: var(--accent); }
+  .line-text {
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+  .line-text .word { display: inline; }
+  .line-text .word.lit { color: var(--accent); }
+
+  /* ── Loop controls ── */
+  .loop-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .loop-info {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    flex: 1;
+  }
+  .loop-count {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .loop-count select { padding: 4px 8px; font-size: 0.75rem; }
+
+  /* ── Exercises ── */
+  .exercises-panel { display: none; flex-direction: column; gap: 0; }
+  .exercises-panel.show { display: flex; }
+
+  .ex-tabs {
+    display: flex;
+    gap: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    gap: 6px;
+  }
+  .ex-tab {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    font-size: 0.75rem;
+  }
+  .ex-tab.active {
+    background: var(--accent);
+    color: #0d0d0f;
+    border-color: var(--accent);
+  }
+
+  .ex-content {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .ex-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .ex-item .ex-sentence { margin-bottom: 6px; }
+  .ex-item .ex-answer {
+    display: none;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+  .ex-item:hover .ex-answer { display: block; }
+  .ex-item .ex-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .stress-words { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .stress-tag {
+    background: rgba(232,255,71,0.12);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Sessions ── */
+  .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .session-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .session-item:hover { background: var(--surface2); }
+  .session-item:last-child { border-bottom: none; }
+  .session-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent2);
+    flex-shrink: 0;
+  }
+  .session-info { flex: 1; min-width: 0; }
+  .session-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .session-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .empty-state {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+
+  /* ── Save bar ── */
+  .save-bar {
+    display: none;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    gap: 8px;
+    flex-direction: column;
+  }
+  .save-bar.show { display: flex; }
+  .save-bar input {
+    width: 100%;
+    font-size: 0.82rem;
+  }
+  .save-bar textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+  }
+  .save-bar textarea:focus { border-color: var(--accent); }
+  .save-actions { display: flex; gap: 8px; }
+  .save-actions button { flex: 1; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(232,255,71,0.1);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🎙</div>
+      <h1>Shadow<span>Lab</span></h1>
+    </div>
+    <div class="student-selector">
+      <label>Student</label>
+      <input type="text" id="studentInput" placeholder="Student name..." style="width:160px">
+    </div>
+  </header>
+
+  <!-- URL Bar -->
+  <div class="url-bar">
+    <input type="text" id="urlInput" placeholder="Paste a YouTube URL… e.g. https://www.youtube.com/watch?v=..." />
+    <button id="loadBtn" onclick="loadVideo()">Load</button>
+  </div>
+
+  <!-- Status -->
+  <div class="status" id="status">
+    <div class="spinner" id="statusSpinner"></div>
+    <span id="statusText"></span>
+  </div>
+
+  <!-- Main grid (hidden until video loaded) -->
+  <div class="main-grid" id="mainGrid" style="display:none">
+
+    <!-- LEFT: Video + controls -->
+    <div class="video-panel">
+
+      <div class="video-wrapper" id="videoWrapper">
+        <div class="video-placeholder" id="videoPlaceholder">
+          <div class="ph-icon">▶</div>
+          <p>Video will appear here</p>
+        </div>
+        <div id="ytPlayer"></div>
+      </div>
+
+      <!-- Playback controls -->
+      <div class="controls">
+        <button class="secondary" onclick="seekRelative(-5)">⏪ 5s</button>
+        <button class="secondary" onclick="togglePlay()" id="playPauseBtn">▶ Play</button>
+        <button class="secondary" onclick="seekRelative(5)">5s ⏩</button>
+        <button class="secondary" id="loopBtn" onclick="toggleLoop()">⟳ Loop line</button>
+        <div class="speed-group">
+          <label>Speed</label>
+          <button class="speed-btn active" onclick="setSpeed(0.5, this)">×0.5</button>
+          <button class="speed-btn" onclick="setSpeed(0.75, this)">×0.75</button>
+          <button class="speed-btn" onclick="setSpeed(1, this)">×1</button>
+        </div>
+      </div>
+
+      <!-- Exercises panel -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">Exercises</span>
+          <div style="display:flex;gap:6px">
+            <button class="secondary" style="padding:4px 10px;font-size:0.75rem" onclick="toggleExercises()">Show/Hide</button>
+            <button style="padding:4px 10px;font-size:0.75rem" id="genBtn" onclick="generateExercises()">Generate</button>
+          </div>
+        </div>
+        <div class="exercises-panel" id="exercisesPanel">
+          <div class="ex-tabs">
+            <button class="ex-tab active" onclick="switchTab('fill_blank', this)">Fill blank</button>
+            <button class="ex-tab" onclick="switchTab('dictation', this)">Dictation</button>
+            <button class="ex-tab" onclick="switchTab('loop_drill', this)">Loop drill</button>
+          </div>
+          <div class="ex-content" id="exContent">
+            <div class="empty-state">Click "Generate" to create exercises from this video.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /video-panel -->
+
+    <!-- RIGHT: Transcript + Sessions -->
+    <div class="transcript-panel">
+
+      <!-- Transcript -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">Transcript</span>
+          <span class="source-badge" id="sourceBadge"></span>
+        </div>
+        <div class="transcript-list" id="transcriptList">
+          <div class="empty-state">Load a video to see the transcript.</div>
+        </div>
+        <div class="loop-bar">
+          <span class="loop-info" id="loopInfo">No line selected</span>
+          <div class="loop-count">
+            <label style="font-size:0.75rem;color:var(--text-dim)">Loops</label>
+            <select id="loopCountSel">
+              <option value="2">×2</option>
+              <option value="3" selected>×3</option>
+              <option value="5">×5</option>
+              <option value="10">×10</option>
+              <option value="0">∞</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">Saved Sessions</span>
+          <button style="padding:4px 10px;font-size:0.75rem" onclick="toggleSaveBar()">+ Save</button>
+        </div>
+        <div class="save-bar" id="saveBar">
+          <input type="text" id="videoTitleInput" placeholder="Video title (optional)…" />
+          <textarea id="notesInput" placeholder="Session notes…"></textarea>
+          <div class="save-actions">
+            <button class="secondary" onclick="toggleSaveBar()">Cancel</button>
+            <button onclick="saveSession()">Save session</button>
+          </div>
+        </div>
+        <div class="sessions-list" id="sessionsList">
+          <div class="empty-state">No sessions yet.</div>
+        </div>
+      </div>
+
+    </div><!-- /transcript-panel -->
+  </div><!-- /main-grid -->
+
+</div><!-- /app -->
+
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const BACKEND = 'BACKEND_URL_PLACEHOLDER'; // sostituito da Vercel env
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let player = null;
+let transcript = [];
+let activeLineIndex = -1;
+let currentVideoId = null;
+let loopActive = false;
+let loopLine = null;
+let loopCount = 0;
+let loopTarget = 3;
+let syncInterval = null;
+let exerciseCache = {};
+let currentExType = 'fill_blank';
+
+// ── YouTube Player ─────────────────────────────────────────────────────────
+function onYouTubeIframeAPIReady() {}
+
+function createPlayer(videoId) {
+  if (player) { player.destroy(); }
+  player = new YT.Player('ytPlayer', {
+    videoId,
+    playerVars: { rel: 0, modestbranding: 1 },
+    events: {
+      onReady: () => {
+        document.getElementById('playPauseBtn').textContent = '▶ Play';
+        startSyncLoop();
+      },
+      onStateChange: (e) => {
+        const playing = e.data === YT.PlayerState.PLAYING;
+        document.getElementById('playPauseBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+        if (!playing) { stopSyncLoop(); } else { startSyncLoop(); }
+      }
+    }
+  });
+}
+
+// ── Sync loop ─────────────────────────────────────────────────────────────────
+function startSyncLoop() {
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(syncTranscript, 200);
+}
+function stopSyncLoop() {
+  clearInterval(syncInterval);
+  syncInterval = null;
+}
+
+function syncTranscript() {
+  if (!player || !player.getCurrentTime) return;
+  const t = player.getCurrentTime();
+  const idx = findActiveSegment(t);
+
+  // Loop logic
+  if (loopActive && loopLine !== null) {
+    const seg = transcript[loopLine];
+    const end = seg.start + seg.duration + 0.1;
+    if (t >= end) {
+      if (loopTarget === 0 || loopCount < loopTarget - 1) {
+        loopCount++;
+        player.seekTo(seg.start, true);
+        return;
+      } else {
+        loopCount = 0;
+        setLoopLine(null);
+      }
+    }
+  }
+
+  if (idx !== activeLineIndex) {
+    setActiveLine(idx);
+  }
+}
+
+function findActiveSegment(t) {
+  for (let i = 0; i < transcript.length; i++) {
+    const s = transcript[i];
+    if (t >= s.start && t < s.start + s.duration + 0.3) return i;
+  }
+  return -1;
+}
+
+// ── Load video ────────────────────────────────────────────────────────────────
+async function loadVideo() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return;
+
+  showStatus('Fetching transcript…', false);
+  document.getElementById('loadBtn').disabled = true;
+  document.getElementById('mainGrid').style.display = 'none';
+
+  try {
+    const res = await fetch(`${BACKEND}/api/transcript?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+
+    transcript = data.transcript;
+    currentVideoId = data.videoId;
+    exerciseCache = {};
+
+    // Source badge
+    const badge = document.getElementById('sourceBadge');
+    badge.textContent = data.source === 'youtube' ? 'YT captions' : 'Gemini AI';
+    badge.className = `source-badge ${data.source}`;
+
+    renderTranscript();
+    showStatus('', false);
+    document.getElementById('mainGrid').style.display = 'grid';
+
+    // Create player
+    if (typeof YT !== 'undefined' && YT.Player) {
+      createPlayer(currentVideoId);
+    } else {
+      window.onYouTubeIframeAPIReady = () => createPlayer(currentVideoId);
+    }
+
+    // Load sessions for this student
+    loadSessions();
+
+  } catch (err) {
+    showStatus('Error: ' + err.message, true);
+  } finally {
+    document.getElementById('loadBtn').disabled = false;
+  }
+}
+
+// ── Transcript rendering ──────────────────────────────────────────────────────
+function renderTranscript() {
+  const list = document.getElementById('transcriptList');
+  list.innerHTML = '';
+  transcript.forEach((seg, i) => {
+    const div = document.createElement('div');
+    div.className = 'transcript-line fade-in';
+    div.dataset.index = i;
+    div.innerHTML = `
+      <span class="line-time">${formatTime(seg.start)}</span>
+      <span class="line-text">${seg.text}</span>
+    `;
+    div.addEventListener('click', () => {
+      if (player) { player.seekTo(seg.start, true); player.playVideo(); }
+      setLoopLine(i);
+    });
+    list.appendChild(div);
+  });
+}
+
+function setActiveLine(idx) {
+  activeLineIndex = idx;
+  const items = document.querySelectorAll('.transcript-line');
+  items.forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+    if (i === idx) {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  });
+}
+
+// ── Loop ──────────────────────────────────────────────────────────────────────
+function setLoopLine(idx) {
+  loopLine = idx;
+  loopCount = 0;
+  loopTarget = parseInt(document.getElementById('loopCountSel').value);
+  if (idx !== null) {
+    const seg = transcript[idx];
+    document.getElementById('loopInfo').textContent = `"${seg.text.substring(0, 40)}…"`;
+  } else {
+    document.getElementById('loopInfo').textContent = 'No line selected';
+    loopActive = false;
+    document.getElementById('loopBtn').style.background = '';
+    document.getElementById('loopBtn').style.color = '';
+  }
+}
+
+function toggleLoop() {
+  if (loopLine === null) return;
+  loopActive = !loopActive;
+  loopCount = 0;
+  const btn = document.getElementById('loopBtn');
+  if (loopActive) {
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#0d0d0f';
+    if (player) { player.seekTo(transcript[loopLine].start, true); player.playVideo(); }
+  } else {
+    btn.style.background = '';
+    btn.style.color = '';
+  }
+}
+
+// ── Playback controls ─────────────────────────────────────────────────────────
+function togglePlay() {
+  if (!player) return;
+  const state = player.getPlayerState();
+  if (state === YT.PlayerState.PLAYING) { player.pauseVideo(); } else { player.playVideo(); }
+}
+
+function seekRelative(delta) {
+  if (!player) return;
+  player.seekTo(player.getCurrentTime() + delta, true);
+}
+
+function setSpeed(rate, btn) {
+  if (player) player.setPlaybackRate(rate);
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Exercises ─────────────────────────────────────────────────────────────────
+function toggleExercises() {
+  document.getElementById('exercisesPanel').classList.toggle('show');
+}
+
+function switchTab(type, btn) {
+  currentExType = type;
+  document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (exerciseCache[type]) { renderExercises(exerciseCache[type], type); }
+  else { document.getElementById('exContent').innerHTML = '<div class="empty-state">Click "Generate" to create exercises.</div>'; }
+}
+
+async function generateExercises() {
+  if (!transcript.length) return;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('exercisesPanel').classList.add('show');
+  document.getElementById('exContent').innerHTML = '<div class="empty-state">⏳ Asking Claude…</div>';
+
+  try {
+    const res = await fetch(`${BACKEND}/api/exercises`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript, type: currentExType })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    exerciseCache[currentExType] = data;
+    renderExercises(data, currentExType);
+  } catch (err) {
+    document.getElementById('exContent').innerHTML = `<div class="empty-state" style="color:var(--accent3)">Error: ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+  }
+}
+
+function renderExercises(data, type) {
+  const c = document.getElementById('exContent');
+  c.innerHTML = '';
+  const exercises = data.exercises || [];
+  if (!exercises.length) { c.innerHTML = '<div class="empty-state">No exercises generated.</div>'; return; }
+
+  exercises.forEach(ex => {
+    const div = document.createElement('div');
+    div.className = 'ex-item fade-in';
+
+    if (type === 'fill_blank') {
+      div.innerHTML = `
+        <div class="ex-sentence">${ex.sentence}</div>
+        <div class="ex-answer">✓ ${ex.blank}</div>
+        <div class="ex-meta">${ex.context || ''}</div>`;
+    } else if (type === 'dictation') {
+      div.innerHTML = `
+        <div class="ex-sentence">🎧 Listen and write</div>
+        <div class="ex-answer">✓ ${ex.text}</div>
+        <div class="ex-meta">${ex.difficulty || ''}</div>`;
+    } else if (type === 'loop_drill') {
+      const stress = (ex.stress_words || []).map(w => `<span class="stress-tag">${w}</span>`).join('');
+      div.innerHTML = `
+        <div class="ex-sentence">${ex.text}</div>
+        <div class="ex-meta">${ex.reason || ''}</div>
+        <div class="stress-words">${stress}</div>`;
+      div.style.cursor = 'pointer';
+      div.title = 'Click to jump to this line';
+      div.addEventListener('click', () => {
+        const idx = transcript.findIndex(s => s.text.includes(ex.text.substring(0, 20)));
+        if (idx >= 0 && player) {
+          player.seekTo(transcript[idx].start, true);
+          player.playVideo();
+          setLoopLine(idx);
+        }
+      });
+    }
+    c.appendChild(div);
+  });
+}
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
+function toggleSaveBar() {
+  document.getElementById('saveBar').classList.toggle('show');
+}
+
+async function saveSession() {
+  const student = document.getElementById('studentInput').value.trim();
+  if (!student) { alert('Please enter a student name first.'); return; }
+  if (!currentVideoId) return;
+
+  const payload = {
+    student_name: student,
+    video_url: document.getElementById('urlInput').value.trim(),
+    video_id: currentVideoId,
+    video_title: document.getElementById('videoTitleInput').value.trim() || null,
+    transcript,
+    notes: document.getElementById('notesInput').value.trim() || null
+  };
+
+  try {
+    const res = await fetch(`${BACKEND}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toggleSaveBar();
+    loadSessions();
+  } catch (err) {
+    alert('Error saving session: ' + err.message);
+  }
+}
+
+async function loadSessions() {
+  const student = document.getElementById('studentInput').value.trim();
+  const url = student ? `${BACKEND}/api/sessions?student=${encodeURIComponent(student)}` : `${BACKEND}/api/sessions`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    renderSessions(data.sessions || []);
+  } catch { /* silent */ }
+}
+
+function renderSessions(sessions) {
+  const list = document.getElementById('sessionsList');
+  if (!sessions.length) {
+    list.innerHTML = '<div class="empty-state">No sessions yet.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  sessions.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'session-item fade-in';
+    const date = new Date(s.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+    div.innerHTML = `
+      <div class="session-dot"></div>
+      <div class="session-info">
+        <div class="session-title">${s.video_title || s.video_id}</div>
+        <div class="session-meta">${s.student_name} · ${date}</div>
+      </div>
+    `;
+    div.addEventListener('click', () => {
+      document.getElementById('urlInput').value = s.video_url;
+      loadVideo();
+    });
+    list.appendChild(div);
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function showStatus(msg, isError) {
+  const el = document.getElementById('status');
+  const spinner = document.getElementById('statusSpinner');
+  if (!msg) { el.classList.remove('show', 'error'); return; }
+  el.classList.add('show');
+  el.classList.toggle('error', isError);
+  spinner.style.display = isError ? 'none' : 'block';
+  document.getElementById('statusText').textContent = msg;
+}
+
+// Load on Enter key
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadVideo();
+});
+</script>
+</body>
+</html>
