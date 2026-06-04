@@ -974,30 +974,23 @@ function renderExercises(data, type) {
         <div class="ex-answer">Model: ${ex.model_answer}</div>`;
 
     } else if (type === 'grammar') {
-      // Header con struttura grammaticale
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'ex-item fade-in';
-      headerDiv.style.background = 'rgba(232,255,71,0.08)';
-      headerDiv.style.borderColor = 'var(--accent)';
-      headerDiv.innerHTML = `
-        <div style="font-size:0.9rem;font-weight:700;color:var(--accent)">${ex.structure || 'Grammar focus'}</div>
-        <div style="font-size:0.82rem;margin-top:4px">${ex.explanation || ''}</div>`;
-      document.getElementById('exContent').appendChild(headerDiv);
-      // Poi aggiungi gli esercizi individuali
-      (ex.exercises || []).forEach(item => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'ex-item fade-in';
+      // Grammar: costruisci tutto nel div principale
+      const subItems = (ex.exercises || []).map(item => {
         if (item.type === 'repeat') {
-          itemDiv.innerHTML = `<div class="ex-sentence">🔊 ${item.prompt}</div>`;
-        } else {
-          itemDiv.innerHTML = `
-            <div class="ex-sentence">${item.prompt}</div>
-            ${item.answer ? `<div class="ex-answer">✓ ${item.answer}</div>` : ''}
-            ${item.transcript_line ? `<div class="ex-meta">From video: "${item.transcript_line}"</div>` : ''}`;
+          return `<div class="ex-sentence" style="margin-top:8px">🔊 ${item.prompt}</div>`;
         }
-        document.getElementById('exContent').appendChild(itemDiv);
-      });
-      return; // skip default append
+        return `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div class="ex-sentence">${item.prompt || ''}</div>
+          ${item.answer ? `<div class="ex-answer">✓ ${item.answer}</div>` : ''}
+          ${item.transcript_line ? `<div class="ex-meta">From video: "${item.transcript_line}"</div>` : ''}
+        </div>`;
+      }).join('');
+      div.style.background = 'rgba(232,255,71,0.05)';
+      div.style.borderColor = 'rgba(232,255,71,0.3)';
+      div.innerHTML = `
+        <div style="font-size:0.9rem;font-weight:700;color:var(--accent)">${ex.structure || 'Grammar focus'}</div>
+        <div style="font-size:0.82rem;margin-top:4px;color:var(--text-dim)">${ex.explanation || ''}</div>
+        ${subItems}`;
 
     } else if (type === 'conversation') {
       div.innerHTML = `
