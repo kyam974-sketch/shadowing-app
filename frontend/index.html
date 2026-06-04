@@ -661,6 +661,7 @@ let loopCount = 0;
 let loopTarget = 3;
 let syncInterval = null;
 let exerciseCache = {};
+let pendingExerciseCache = null;
 let currentExType = 'fill_blank';
 
 // ── YouTube Player ─────────────────────────────────────────────────────────
@@ -769,6 +770,23 @@ async function loadVideo() {
 
     // Load sessions for this student
     loadSessions();
+
+    // Ripristina cache esercizi se disponibile
+    if (pendingExerciseCache) {
+      exerciseCache = pendingExerciseCache;
+      pendingExerciseCache = null;
+      // Mostra il primo tipo disponibile
+      const firstType = Object.keys(exerciseCache)[0];
+      if (firstType) {
+        document.getElementById('exercisesPanel').classList.add('show');
+        // Attiva il tab corrispondente
+        document.querySelectorAll('.ex-tab').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('onclick').includes(firstType));
+        });
+        currentExType = firstType;
+        renderExercises(exerciseCache[firstType], firstType);
+      }
+    }
 
   } catch (err) {
     showStatus('Error: ' + err.message, true);
@@ -1083,7 +1101,8 @@ async function saveSession() {
     video_id: currentVideoId,
     video_title: document.getElementById('videoTitleInput').value.trim() || null,
     transcript,
-    notes: document.getElementById('notesInput').value.trim() || null
+    notes: document.getElementById('notesInput').value.trim() || null,
+    exercises: Object.keys(exerciseCache).length > 0 ? exerciseCache : null
   };
 
   try {
@@ -1132,6 +1151,7 @@ function renderSessions(sessions) {
     `;
     div.addEventListener('click', () => {
       document.getElementById('urlInput').value = s.video_url;
+      if (s.exercises) pendingExerciseCache = s.exercises;
       loadVideo();
     });
     list.appendChild(div);
