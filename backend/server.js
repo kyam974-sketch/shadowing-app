@@ -41,69 +41,24 @@ function extractVideoId(url) {
   return null;
 }
 
-async function getTranscriptYoutube(videoId) {
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) throw new Error('YOUTUBE_API_KEY not configured');
+async function getTranscriptSupadata(videoId) {
+  const apiKey = process.env.SUPADATA_API_KEY;
+  if (!apiKey) throw new Error('SUPADATA_API_KEY not configured');
 
-  // Step 1: trova i caption tracks disponibili
-  const listUrl = `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${apiKey}`;
-  const listRes = await fetch(listUrl);
-  const listData = await listRes.json();
-
-  if (listData.error) throw new Error(listData.error.message);
-  if (!listData.items || listData.items.length === 0) throw new Error('No captions available for this video');
-
-  // Preferisci inglese, altrimenti prendi il primo disponibile
-  const tracks = listData.items;
-  const enTrack = tracks.find(t => t.snippet.language === 'en' || t.snippet.language === 'en-US' || t.snippet.language === 'en-GB');
-  const track = enTrack || tracks[0];
-  const trackId = track.id;
-
-  // Step 2: scarica il testo del caption
-  const dlUrl = `https://www.googleapis.com/youtube/v3/captions/${trackId}?tfmt=srt&key=${apiKey}`;
-  const dlRes = await fetch(dlUrl);
-
-  if (!dlRes.ok) {
-    // I caption scaricabili via API richiedono OAuth — fallback a timedtext
-    throw new Error('Caption download requires OAuth — trying timedtext');
-  }
-
-  const srtText = await dlRes.text();
-  return parseSRT(srtText);
-}
-
-async function getTranscriptTimedText(videoId) {
-  // Fallback: timedtext endpoint (funziona senza auth per video con CC aperte)
-  const url = `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}&fmt=json3`;
+  const url = `https://api.supadata.ai/v1/youtube/transcript?videoId=${videoId}&text=false`;
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ShadowLab/1.0)' }
+    headers: { 'x-api-key': apiKey }
   });
-  if (!res.ok) throw new Error('timedtext not available');
   const data = await res.json();
-  if (!data.events) throw new Error('No events in timedtext response');
 
-  return data.events
-    .filter(e => e.segs)
-    .map(e => ({
-      text: e.segs.map(s => s.utf8 || '').join('').replace(/\n/g, ' ').trim(),
-      start: Math.round(e.tStartMs / 100) / 10,
-      duration: Math.round((e.dDurationMs || 2000) / 100) / 10
-    }))
-    .filter(s => s.text);
-}
+  if (!res.ok) throw new Error(data.message || data.error || 'Supadata error');
+  if (!data.content || !data.content.length) throw new Error('No transcript content from Supadata');
 
-function parseSRT(srt) {
-  const blocks = srt.trim().split(/\n\n+/);
-  return blocks.map(block => {
-    const lines = block.split('\n');
-    if (lines.length < 3) return null;
-    const times = lines[1].match(/(\d+):(\d+):(\d+),(\d+) --> (\d+):(\d+):(\d+),(\d+)/);
-    if (!times) return null;
-    const start = parseInt(times[1])*3600 + parseInt(times[2])*60 + parseInt(times[3]) + parseInt(times[4])/1000;
-    const end = parseInt(times[5])*3600 + parseInt(times[6])*60 + parseInt(times[7]) + parseInt(times[8])/1000;
-    const text = lines.slice(2).join(' ').replace(/<[^>]+>/g, '').trim();
-    return { text, start: Math.round(start*10)/10, duration: Math.round((end-start)*10)/10 };
-  }).filter(Boolean);
+  return data.content.map(seg => ({
+    text: (seg.text || '').trim(),
+    start: typeof seg.offset === 'number' ? Math.round(seg.offset / 100) / 10 : 0,
+    duration: typeof seg.duration === 'number' ? Math.round(seg.duration / 100) / 10 : 2
+  })).filter(seg => seg.text);
 }
 
 async function getTranscriptGemini(videoUrl) {
@@ -151,22 +106,14 @@ app.get('/api/transcript', async (req, res) => {
   let transcript = null;
   let source = null;
 
+  // Tentativo 1: Supadata
   try {
-    console.log(`[transcript] Trying YouTube Data API for ${videoId}...`);
-    transcript = await getTranscriptYoutube(videoId);
+    console.log(`[transcript] Trying Supadata for ${videoId}...`);
+    transcript = await getTranscriptSupadata(videoId);
     source = 'youtube';
-    console.log(`[transcript] ✓ YouTube Data API: ${transcript.length} segments`);
+    console.log(`[transcript] ✓ Supadata: ${transcript.length} segments`);
   } catch (err) {
-    console.warn(`[transcript] ✗ YouTube Data API failed: ${err.message}`);
-    // Secondo tentativo: timedtext endpoint
-    try {
-      console.log(`[transcript] Trying timedtext endpoint...`);
-      transcript = await getTranscriptTimedText(videoId);
-      source = 'youtube';
-      console.log(`[transcript] ✓ timedtext: ${transcript.length} segments`);
-    } catch (err2) {
-      console.warn(`[transcript] ✗ timedtext failed: ${err2.message}`);
-    }
+    console.warn(`[transcript] ✗ Supadata failed: ${err.message}`);
   }
 
   if (!transcript) {
