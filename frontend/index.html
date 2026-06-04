@@ -883,25 +883,34 @@ function renderExercises(data, type) {
         <div class="ex-meta">${ex.difficulty || ''}</div>`;
     } else if (type === 'loop_drill') {
       const stress = (ex.stress_words || []).map(w => `<span class="stress-tag">${w}</span>`).join('');
+      const drillId = 'drill_' + Math.random().toString(36).substr(2,6);
       div.innerHTML = `
         <div class="ex-sentence">${ex.text}</div>
         <div class="ex-meta">${ex.reason || ''}</div>
-        <div class="stress-words">${stress}</div>`;
-      div.style.cursor = 'pointer';
-      div.title = 'Click to jump to this line';
-      div.addEventListener('click', () => {
-        // Cerca la riga più simile nel transcript
-        const searchText = ex.text.toLowerCase().substring(0, 30);
-        const idx = transcript.findIndex(s => 
-          s.text.toLowerCase().includes(searchText) ||
-          searchText.includes(s.text.toLowerCase().substring(0, 20))
-        );
-        if (idx >= 0 && player) {
-          player.seekTo(transcript[idx].start, true);
-          player.playVideo();
-          setLoopLine(idx);
-        }
-      });
+        <div class="stress-words">${stress}</div>
+        <button id="${drillId}" style="margin-top:8px;padding:5px 12px;font-size:0.75rem">▶ Practice this</button>`;
+      // Usa setTimeout per assicurarsi che il DOM sia pronto
+      setTimeout(() => {
+        const btn = document.getElementById(drillId);
+        if (btn) btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const searchText = ex.text.toLowerCase().substring(0, 30);
+          const idx = transcript.findIndex(s => 
+            s.text.toLowerCase().includes(searchText) ||
+            searchText.includes(s.text.toLowerCase().substring(0, 20))
+          );
+          if (idx >= 0 && player) {
+            player.seekTo(transcript[idx].start, true);
+            player.playVideo();
+            setLoopLine(idx);
+            loopActive = true;
+            loopCount = 0;
+            const loopBtn = document.getElementById('loopBtn');
+            loopBtn.style.background = 'var(--accent)';
+            loopBtn.style.color = '#0d0d0f';
+          }
+        });
+      }, 50);
     }
     c.appendChild(div);
   });
