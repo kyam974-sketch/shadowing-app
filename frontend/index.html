@@ -844,6 +844,59 @@ function setActiveLine(idx) {
 }
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
+async function addVocabInput(existingData) {
+  const c = document.getElementById('exContent');
+  if (!c) return;
+  // Rimuovi eventuale input precedente
+  const old = document.getElementById('vocabInputRow');
+  if (old) old.remove();
+
+  const row = document.createElement('div');
+  row.id = 'vocabInputRow';
+  row.style.cssText = 'grid-column:1/-1;display:flex;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:4px;';
+  row.innerHTML = `
+    <input type="text" id="vocabCustomInput" placeholder="Add a word or phrase… e.g. you ruled the roost" style="flex:1;font-size:0.82rem;padding:8px 12px">
+    <button id="vocabAddBtn" style="padding:8px 14px;font-size:0.8rem">+ Add</button>
+  `;
+  c.appendChild(row);
+
+  document.getElementById('vocabAddBtn').addEventListener('click', async () => {
+    const phrase = document.getElementById('vocabCustomInput').value.trim();
+    if (!phrase) return;
+    const btn = document.getElementById('vocabAddBtn');
+    btn.textContent = '⏳';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${BACKEND}/api/exercises`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript, type: 'vocabulary_single', customPhrase: phrase })
+      });
+      const data = await res.json();
+      if (data.exercises && data.exercises[0]) {
+        const ex = data.exercises[0];
+        const div = document.createElement('div');
+        div.className = 'ex-item fade-in';
+        div.style.borderColor = 'var(--accent2)';
+        div.innerHTML = `
+          <div class="ex-sentence" style="font-weight:700;font-size:1rem">${ex.word}</div>
+          <div class="ex-meta" style="margin:4px 0">${ex.definition}</div>
+          <div class="ex-answer" style="display:block;font-size:0.8rem;color:var(--text-dim);font-family:'DM Mono',monospace">"<em>${ex.transcript_example || ex.example}</em>"</div>`;
+        // Inserisci prima del campo input
+        c.insertBefore(div, row);
+        document.getElementById('vocabCustomInput').value = '';
+        // Aggiorna cache
+        if (exerciseCache['vocabulary']) {
+          exerciseCache['vocabulary'].exercises.push(ex);
+        }
+      }
+    } catch(e) { console.error(e); }
+    btn.textContent = '+ Add';
+    btn.disabled = false;
+  });
+}
+
 function updateLoopBtn() {
   const btn = document.getElementById('loopBtn');
   if (loopActive && loopLine !== null) {
@@ -942,6 +995,12 @@ async function generateExercises() {
 function renderExercises(data, type) {
   const c = document.getElementById('exContent');
   c.innerHTML = '';
+
+  // Per vocabulary aggiungi campo input custom alla fine
+  if (type === 'vocabulary') {
+    // Verrà aggiunto dopo il loop — usiamo un flag
+    setTimeout(() => addVocabInput(data), 50);
+  }
 
   // Grammar ha struttura speciale — gestiscila prima del loop
   if (type === 'grammar') {
