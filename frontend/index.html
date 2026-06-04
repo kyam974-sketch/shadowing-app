@@ -520,7 +520,7 @@
         <button class="secondary" onclick="seekRelative(-5)">⏪ 5s</button>
         <button class="secondary" onclick="togglePlay()" id="playPauseBtn">▶ Play</button>
         <button class="secondary" onclick="seekRelative(5)">5s ⏩</button>
-        <button class="secondary" id="loopBtn" onclick="toggleLoop()">⟳ Loop line</button>
+        <button class="secondary" id="loopBtn" onclick="toggleLoop()">⟳ Loop OFF</button>
         <div class="speed-group">
           <label>Speed</label>
           <button class="speed-btn active" onclick="setSpeed(0.5, this)">×0.5</button>
@@ -565,7 +565,7 @@
           <div class="empty-state">Load a video to see the transcript.</div>
         </div>
         <div class="loop-bar">
-          <span class="loop-info" id="loopInfo">No line selected</span>
+          <span class="loop-info" id="loopInfo">Tap a line to loop it</span>
           <div class="loop-count">
             <label style="font-size:0.75rem;color:var(--text-dim)">Loops</label>
             <select id="loopCountSel">
@@ -749,14 +749,18 @@ function renderTranscript() {
       <span class="line-text">${seg.text}</span>
     `;
     div.addEventListener('click', () => {
-      if (player) { player.seekTo(seg.start, true); player.playVideo(); }
-      setLoopLine(i);
-      // Attiva il loop automaticamente al click
-      loopActive = true;
-      loopCount = 0;
-      const btn = document.getElementById('loopBtn');
-      btn.style.background = 'var(--accent)';
-      btn.style.color = '#0d0d0f';
+      if (loopLine === i && loopActive) {
+        // Secondo tap sulla stessa riga: disattiva loop
+        loopActive = false;
+        updateLoopBtn();
+      } else {
+        // Tap su nuova riga: salta, avvia, attiva loop
+        if (player) { player.seekTo(seg.start, true); player.playVideo(); }
+        setLoopLine(i);
+        loopActive = true;
+        loopCount = 0;
+        updateLoopBtn();
+      }
     });
     list.appendChild(div);
   });
@@ -774,6 +778,19 @@ function setActiveLine(idx) {
 }
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
+function updateLoopBtn() {
+  const btn = document.getElementById('loopBtn');
+  if (loopActive && loopLine !== null) {
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#0d0d0f';
+    btn.textContent = '⟳ Loop ON';
+  } else {
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.textContent = '⟳ Loop OFF';
+  }
+}
+
 function setLoopLine(idx) {
   loopLine = idx;
   loopCount = 0;
@@ -782,10 +799,9 @@ function setLoopLine(idx) {
     const seg = transcript[idx];
     document.getElementById('loopInfo').textContent = `"${seg.text.substring(0, 40)}…"`;
   } else {
-    document.getElementById('loopInfo').textContent = 'No line selected';
+    document.getElementById('loopInfo').textContent = 'Tap a line to loop it';
     loopActive = false;
-    document.getElementById('loopBtn').style.background = '';
-    document.getElementById('loopBtn').style.color = '';
+    updateLoopBtn();
   }
 }
 
@@ -793,14 +809,10 @@ function toggleLoop() {
   if (loopLine === null) return;
   loopActive = !loopActive;
   loopCount = 0;
-  const btn = document.getElementById('loopBtn');
-  if (loopActive) {
-    btn.style.background = 'var(--accent)';
-    btn.style.color = '#0d0d0f';
-    if (player) { player.seekTo(transcript[loopLine].start, true); player.playVideo(); }
-  } else {
-    btn.style.background = '';
-    btn.style.color = '';
+  updateLoopBtn();
+  if (loopActive && player) {
+    player.seekTo(transcript[loopLine].start, true);
+    player.playVideo();
   }
 }
 
@@ -894,20 +906,35 @@ function renderExercises(data, type) {
         const btn = document.getElementById(drillId);
         if (btn) btn.addEventListener('click', (e) => {
           e.stopPropagation();
+          btn.textContent = '⏳';
           const searchText = ex.text.toLowerCase().substring(0, 30);
-          const idx = transcript.findIndex(s => 
+          // Ricerca più ampia: parole chiave singole
+          const words = ex.text.toLowerCase().split(' ').filter(w => w.length > 4);
+          let idx = transcript.findIndex(s => 
             s.text.toLowerCase().includes(searchText) ||
             searchText.includes(s.text.toLowerCase().substring(0, 20))
           );
+          // Fallback: cerca per parole chiave
+          if (idx < 0 && words.length > 0) {
+            idx = transcript.findIndex(s => 
+              words.some(w => s.text.toLowerCase().includes(w))
+            );
+          }
           if (idx >= 0 && player) {
+            btn.textContent = '✓ Playing';
             player.seekTo(transcript[idx].start, true);
             player.playVideo();
             setLoopLine(idx);
             loopActive = true;
             loopCount = 0;
-            const loopBtn = document.getElementById('loopBtn');
-            loopBtn.style.background = 'var(--accent)';
-            loopBtn.style.color = '#0d0d0f';
+            updateLoopBtn();
+            setTimeout(() => { btn.textContent = '▶ Practice this'; }, 2000);
+          } else if (!player) {
+            btn.textContent = '⚠ Start video first';
+            setTimeout(() => { btn.textContent = '▶ Practice this'; }, 2000);
+          } else {
+            btn.textContent = '⚠ Line not found';
+            setTimeout(() => { btn.textContent = '▶ Practice this'; }, 2000);
           }
         });
       }, 50);
