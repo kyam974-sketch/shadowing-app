@@ -142,28 +142,42 @@ app.post('/api/exercises', async (req, res) => {
   const fullText = transcript.map(s => s.text).join(' ');
 
   const prompts = {
-    fill_blank: `You are an English speaking coach. Based on this transcript, create 5 fill-in-the-blank exercises focused on natural spoken English phrases.
-For each exercise:
-- Remove 1-2 key words from a sentence
-- The blanks should target common collocations, phrasal verbs, or natural spoken patterns
-- Provide the answer
 
-Return ONLY valid JSON, no markdown:
-{"exercises":[{"sentence":"I ___ to the store yesterday","blank":"went","context":"past simple - common verb"},...]}`,
+    fill_blank: `You are an English coach for A1 adult learners. From this transcript create 5 fill-in-the-blank exercises using real sentences from the video. Target natural spoken patterns, common verbs, collocations. Remove 1-2 words per sentence. Keep sentences short and clear for A1 level.
+Return ONLY valid JSON, no markdown: {"exercises":[{"sentence":"I ___ to the store yesterday","blank":"went","context":"past simple - common verb"}]}`,
 
-    dictation: `You are an English speaking coach. Select 6 short sentences from this transcript that are great for dictation practice (clear, natural, not too long).
-Return ONLY valid JSON, no markdown:
-{"exercises":[{"text":"Have you ever been to London?","difficulty":"easy"},...]}`,
+    dictation: `You are an English coach for A1 adult learners. Select 5 short clear sentences from this transcript ideal for dictation. Prioritize natural everyday language. Max 10 words each.
+Return ONLY valid JSON, no markdown: {"exercises":[{"text":"Have you ever been here before?","difficulty":"easy","focus":"question form"}]}`,
 
-    loop_drill: `You are an English speaking coach. Identify 5 sentences or phrases from this transcript ideal for loop shadowing (rhythmically interesting, natural stress patterns, useful in real conversation).
-Return ONLY valid JSON, no markdown:
-{"exercises":[{"text":"I was wondering if you could help me","reason":"polite request pattern","stress_words":["wondering","help"]},...]}`,
+    loop_drill: `You are an English coach for A1 adult learners. Identify 5 phrases from this transcript ideal for loop shadowing — rhythmically interesting, natural stress, useful in real life. Must be exact quotes from the transcript.
+Return ONLY valid JSON, no markdown: {"exercises":[{"text":"I was wondering if you could help me","reason":"polite request","stress_words":["wondering","help"]}]}`,
+
+    true_false: `You are an English coach for A1 adult learners. Create 6 true/false statements about the content of this transcript. Mix true and false. Keep language very simple.
+Return ONLY valid JSON, no markdown: {"exercises":[{"statement":"The professor teaches criminal law.","answer":true,"correction":null},{"statement":"The class is called Law 200.","answer":false,"correction":"It is called Law 100."}]}`,
+
+    sentence_ordering: `You are an English coach for A1 adult learners. Take 4 short sentences from this transcript and scramble the words. Student must reorder them. Use only simple short sentences.
+Return ONLY valid JSON, no markdown: {"exercises":[{"words":["store","I","the","went","to"],"answer":"I went to the store"}]}`,
+
+    vocabulary: `You are an English coach for A1 adult learners. Find 7 useful words or short phrases from this transcript. For each: simple English definition (no Italian), example sentence from the transcript.
+Return ONLY valid JSON, no markdown: {"exercises":[{"word":"attorney","definition":"a lawyer who works in a court","example":"She works as a defense attorney.","transcript_example":"as a defense attorney I spend most of my time"}]}`,
+
+    qa: `You are an English coach for A1 adult learners. Create 5 simple comprehension questions about this transcript. Student answers with short spoken responses. Questions must be answerable from the video. Very simple language only.
+Return ONLY valid JSON, no markdown: {"exercises":[{"question":"What subject does the professor teach?","model_answer":"She teaches criminal law.","hint":"Listen for the name of the class"}]}`,
+
+    grammar: `You are an English coach for A1 adult learners. Find ONE grammar structure used naturally in this transcript. Create 5 practice exercises based on real sentences. Focus on USE not rules — no grammar theory. Student hears the pattern and practices it.
+Return ONLY valid JSON, no markdown: {"structure":"present simple","explanation":"Used for facts and routines — hear how it sounds naturally","exercises":[{"type":"complete","prompt":"She ___ (work) as his assistant.","answer":"works","transcript_line":"she worked as the second assistant"},{"type":"repeat","prompt":"Say this out loud: She works as his assistant.","answer":null}]}`,
+
+    conversation: `You are an English coach for A1 adult learners. Create 4 conversation starter questions inspired by the themes of this transcript. Personal, easy to answer, A1 level. Goal: get the student speaking freely.
+Return ONLY valid JSON, no markdown: {"exercises":[{"question":"Do you have a favorite TV show? What is it about?","theme":"entertainment","scaffold":"My favorite show is... It is about..."}]}`,
+
+    pronunciation: `You are an English coach for A1 adult learners. Select 5 phrases from this transcript excellent for pronunciation practice. Focus on connected speech, word stress, or sounds difficult for Italian speakers. Simple explanations.
+Return ONLY valid JSON, no markdown: {"exercises":[{"text":"I don't know what terrible things","focus":"weak forms: don't sounds like dən, what sounds like wət","tip":"Say it fast and smooth, not word by word"}]}`,
   };
 
   try {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
+      max_tokens: 1500,
       messages: [{
         role: 'user',
         content: `${prompts[type] || prompts.fill_blank}\n\nTranscript:\n${fullText.substring(0, 3000)}`
