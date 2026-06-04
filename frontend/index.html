@@ -702,7 +702,11 @@ async function loadVideo() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed');
 
-    transcript = data.transcript;
+    transcript = (data.transcript || []).map(seg => ({
+      text: seg.text || seg.content || seg.transcript || seg.words || JSON.stringify(seg),
+      start: typeof seg.start === 'number' ? seg.start : (seg.offset / 1000 || 0),
+      duration: typeof seg.duration === 'number' ? seg.duration : (seg.dur || seg.length || 2)
+    })).filter(seg => seg.text && seg.text !== 'undefined');
     currentVideoId = data.videoId;
     exerciseCache = {};
 
@@ -747,6 +751,12 @@ function renderTranscript() {
     div.addEventListener('click', () => {
       if (player) { player.seekTo(seg.start, true); player.playVideo(); }
       setLoopLine(i);
+      // Attiva il loop automaticamente al click
+      loopActive = true;
+      loopCount = 0;
+      const btn = document.getElementById('loopBtn');
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#0d0d0f';
     });
     list.appendChild(div);
   });
@@ -880,7 +890,12 @@ function renderExercises(data, type) {
       div.style.cursor = 'pointer';
       div.title = 'Click to jump to this line';
       div.addEventListener('click', () => {
-        const idx = transcript.findIndex(s => s.text.includes(ex.text.substring(0, 20)));
+        // Cerca la riga più simile nel transcript
+        const searchText = ex.text.toLowerCase().substring(0, 30);
+        const idx = transcript.findIndex(s => 
+          s.text.toLowerCase().includes(searchText) ||
+          searchText.includes(s.text.toLowerCase().substring(0, 20))
+        );
         if (idx >= 0 && player) {
           player.seekTo(transcript[idx].start, true);
           player.playVideo();
