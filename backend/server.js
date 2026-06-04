@@ -152,8 +152,9 @@ app.post('/api/exercises', async (req, res) => {
         messages: [{
           role: 'user',
           content: `You are an English coach for A1 adult learners. Analyze this word or phrase: "${customPhrase}"
-Give a simple English definition and find or create a natural example sentence (preferably from this context: "${fullText.substring(0,500)}").
-Return ONLY valid JSON: {"exercises":[{"word":"${customPhrase}","definition":"simple definition","example":"example sentence","transcript_example":"if found in transcript"}]}`
+Give a simple English definition. Search carefully in the transcript for this phrase or similar wording (it may be split across lines). If found, use the exact transcript text as example. If not found verbatim, create a natural example sentence in the same style and context.
+Transcript: "${fullText.substring(0,1500)}"
+Return ONLY valid JSON: {"exercises":[{"word":"${customPhrase}","definition":"simple definition","example":"example sentence using the phrase naturally","transcript_example":"exact quote from transcript if found, otherwise same as example"}]}`
         }]
       });
       const raw = message.content[0].text.replace(/```json|```/g, '').trim();
