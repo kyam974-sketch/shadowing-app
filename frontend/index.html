@@ -159,13 +159,16 @@
   /* ── Main layout ── */
   .main-grid {
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 360px;
     gap: 20px;
     max-width: 100%;
-    overflow: hidden;
   }
   @media (max-width: 800px) {
     .main-grid { grid-template-columns: 1fr; }
+  }
+  .exercises-row {
+    margin-top: 0;
+    width: 100%;
   }
 
   /* ── Video panel ── */
@@ -357,10 +360,10 @@
 
   .ex-content {
     padding: 14px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 12px;
-    max-height: 320px;
+    max-height: 400px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -545,34 +548,6 @@
         </div>
       </div>
 
-      <!-- Exercises panel -->
-      <div class="panel-card">
-        <div class="panel-header">
-          <span class="panel-title">Exercises</span>
-          <div style="display:flex;gap:6px">
-            <button class="secondary" style="padding:4px 10px;font-size:0.75rem" onclick="toggleExercises()">Show/Hide</button>
-            <button style="padding:4px 10px;font-size:0.75rem" id="genBtn" onclick="generateExercises()">Generate</button>
-          </div>
-        </div>
-        <div class="exercises-panel" id="exercisesPanel">
-          <div class="ex-tabs">
-            <button class="ex-tab active" onclick="switchTab('fill_blank', this)">Fill blank</button>
-            <button class="ex-tab" onclick="switchTab('dictation', this)">Dictation</button>
-            <button class="ex-tab" onclick="switchTab('loop_drill', this)">Loop drill</button>
-            <button class="ex-tab" onclick="switchTab('true_false', this)">True/False</button>
-            <button class="ex-tab" onclick="switchTab('sentence_ordering', this)">Word order</button>
-            <button class="ex-tab" onclick="switchTab('vocabulary', this)">Vocabulary</button>
-            <button class="ex-tab" onclick="switchTab('qa', this)">Q&amp;A</button>
-            <button class="ex-tab" onclick="switchTab('grammar', this)">Grammar</button>
-            <button class="ex-tab" onclick="switchTab('conversation', this)">Conversation</button>
-            <button class="ex-tab" onclick="switchTab('pronunciation', this)">Pronunciation</button>
-          </div>
-          <div class="ex-content" id="exContent">
-            <div class="empty-state">Click "Generate" to create exercises from this video.</div>
-          </div>
-        </div>
-      </div>
-
     </div><!-- /video-panel -->
 
     <!-- RIGHT: Transcript + Sessions -->
@@ -623,6 +598,36 @@
 
     </div><!-- /transcript-panel -->
   </div><!-- /main-grid -->
+
+  <!-- Exercises row - full width below grid -->
+  <div class="exercises-row">
+    <div class="panel-card">
+      <div class="panel-header">
+        <span class="panel-title">Exercises</span>
+        <div style="display:flex;gap:6px">
+          <button class="secondary" style="padding:4px 10px;font-size:0.75rem" onclick="toggleExercises()">Show/Hide</button>
+          <button style="padding:4px 10px;font-size:0.75rem" id="genBtn" onclick="generateExercises()">Generate</button>
+        </div>
+      </div>
+      <div class="exercises-panel" id="exercisesPanel">
+        <div class="ex-tabs">
+          <button class="ex-tab active" onclick="switchTab('fill_blank', this)">Fill blank</button>
+          <button class="ex-tab" onclick="switchTab('dictation', this)">Dictation</button>
+          <button class="ex-tab" onclick="switchTab('loop_drill', this)">Loop drill</button>
+          <button class="ex-tab" onclick="switchTab('true_false', this)">True/False</button>
+          <button class="ex-tab" onclick="switchTab('sentence_ordering', this)">Word order</button>
+          <button class="ex-tab" onclick="switchTab('vocabulary', this)">Vocabulary</button>
+          <button class="ex-tab" onclick="switchTab('qa', this)">Q&amp;A</button>
+          <button class="ex-tab" onclick="switchTab('grammar', this)">Grammar</button>
+          <button class="ex-tab" onclick="switchTab('conversation', this)">Conversation</button>
+          <button class="ex-tab" onclick="switchTab('pronunciation', this)">Pronunciation</button>
+        </div>
+        <div class="ex-content" id="exContent">
+          <div class="empty-state">Click "Generate" to create exercises from this video.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div><!-- /app -->
 
