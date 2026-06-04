@@ -887,6 +887,29 @@ async function generateExercises() {
 function renderExercises(data, type) {
   const c = document.getElementById('exContent');
   c.innerHTML = '';
+
+  // Grammar ha struttura speciale — gestiscila prima del loop
+  if (type === 'grammar') {
+    const subItems = (data.exercises || []).map(item => {
+      if (item.type === 'repeat') {
+        return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div class="ex-sentence">🔊 ${item.prompt}</div>
+        </div>`;
+      }
+      return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="ex-sentence">${item.prompt || ''}</div>
+        ${item.answer ? `<div class="ex-answer">✓ ${item.answer}</div>` : ''}
+        ${item.transcript_line ? `<div class="ex-meta" style="margin-top:4px">From video: "<em>${item.transcript_line}</em>"</div>` : ''}
+      </div>`;
+    }).join('');
+    c.innerHTML = `<div class="ex-item fade-in" style="border-color:rgba(232,255,71,0.3)">
+      <div style="font-size:0.9rem;font-weight:700;color:var(--accent)">${data.structure || 'Grammar focus'}</div>
+      <div style="font-size:0.82rem;margin-top:6px;color:var(--text-dim)">${data.explanation || ''}</div>
+      ${subItems}
+    </div>`;
+    return;
+  }
+
   const exercises = data.exercises || [];
   if (!exercises.length) { c.innerHTML = '<div class="empty-state">No exercises generated.</div>'; return; }
 
