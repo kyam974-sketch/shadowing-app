@@ -28,7 +28,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { overflow-x: hidden; max-width: 100vw; }
+  html { overflow-x: hidden; }
 
   body {
     background: var(--bg);
@@ -230,6 +230,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .panel-card {
@@ -265,6 +267,7 @@
   .transcript-list {
     max-height: 360px;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 8px;
     display: flex;
     flex-direction: column;
