@@ -385,7 +385,7 @@
     font-size: 0.8rem;
     margin-top: 4px;
   }
-  .ex-item:hover .ex-answer { display: block; }
+  /* ex-answer revealed on tap */
   .ex-item .ex-meta {
     font-size: 0.72rem;
     color: var(--text-dim);
@@ -1030,6 +1030,8 @@ function renderExercises(data, type) {
   exercises.forEach(ex => {
     const div = document.createElement('div');
     div.className = 'ex-item fade-in';
+    div.style.cursor = 'pointer';
+    div.title = 'Tap to reveal answer';
 
     if (type === 'fill_blank') {
       div.innerHTML = `
@@ -1037,10 +1039,20 @@ function renderExercises(data, type) {
         <div class="ex-answer">✓ ${ex.blank}</div>
         <div class="ex-meta">${ex.context || ''}</div>`;
     } else if (type === 'dictation') {
+      const dictId = 'dict_' + Math.random().toString(36).substr(2,6);
       div.innerHTML = `
-        <div class="ex-sentence">🎧 Listen and write</div>
-        <div class="ex-answer">✓ ${ex.text}</div>
-        <div class="ex-meta">${ex.difficulty || ''}</div>`;
+        <div class="ex-sentence" style="margin-bottom:6px">🎧 Listen and write</div>
+        <div class="ex-meta" style="margin-bottom:8px">${ex.difficulty || ''}${ex.focus ? ' · ' + ex.focus : ''}</div>
+        <button id="${dictId}" style="padding:4px 12px;font-size:0.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border)">Show answer</button>
+        <div class="ex-answer" id="ans_${dictId}" style="display:none;margin-top:6px">✓ ${ex.text}</div>`;
+      setTimeout(() => {
+        const btn = document.getElementById(dictId);
+        if (btn) btn.addEventListener('click', () => {
+          const ans = document.getElementById('ans_' + dictId);
+          if (ans.style.display === 'none') { ans.style.display = 'block'; btn.textContent = 'Hide'; }
+          else { ans.style.display = 'none'; btn.textContent = 'Show answer'; }
+        });
+      }, 50);
     } else if (type === 'loop_drill') {
       const stress = (ex.stress_words || []).map(w => `<span class="stress-tag">${w}</span>`).join('');
       const drillId = 'drill_' + Math.random().toString(36).substr(2,6);
@@ -1141,6 +1153,24 @@ function renderExercises(data, type) {
         <div style="margin-top:4px;font-size:0.78rem;color:var(--accent2)">Tip: ${ex.tip}</div>`;
     }
     c.appendChild(div);
+    // Tap to reveal answer
+    const answer = div.querySelector('.ex-answer');
+    if (answer) {
+      answer.style.display = 'none';
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin-top:6px';
+      hint.textContent = '👆 Tap to reveal';
+      div.appendChild(hint);
+      div.addEventListener('click', () => {
+        if (answer.style.display === 'none') {
+          answer.style.display = 'block';
+          hint.textContent = '👆 Tap to hide';
+        } else {
+          answer.style.display = 'none';
+          hint.textContent = '👆 Tap to reveal';
+        }
+      });
+    }
   });
 }
 
