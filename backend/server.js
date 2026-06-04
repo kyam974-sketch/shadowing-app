@@ -139,15 +139,38 @@ app.post('/api/exercises', async (req, res) => {
     return res.status(400).json({ error: 'Missing or invalid transcript' });
   }
 
+  const { customPhrase } = req.body;
   const fullText = transcript.map(s => s.text).join(' ');
+
+  // Tipo speciale: analizza una singola parola/frase custom
+  if (type === 'vocabulary_single') {
+    if (!customPhrase) return res.status(400).json({ error: 'Missing customPhrase' });
+    try {
+      const message = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `You are an English coach for A1 adult learners. Analyze this word or phrase: "${customPhrase}"
+Give a simple English definition and find or create a natural example sentence (preferably from this context: "${fullText.substring(0,500)}").
+Return ONLY valid JSON: {"exercises":[{"word":"${customPhrase}","definition":"simple definition","example":"example sentence","transcript_example":"if found in transcript"}]}`
+        }]
+      });
+      const raw = message.content[0].text.replace(/```json|```/g, '').trim();
+      const data = JSON.parse(raw);
+      return res.json({ type: 'vocabulary_single', ...data });
+    } catch(err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
 
   const prompts = {
 
     fill_blank: `You are an English coach for A1 adult learners. From this transcript create 5 fill-in-the-blank exercises using real sentences from the video. Target natural spoken patterns, common verbs, collocations. Remove 1-2 words per sentence. Keep sentences short and clear for A1 level.
 Return ONLY valid JSON, no markdown: {"exercises":[{"sentence":"I ___ to the store yesterday","blank":"went","context":"past simple - common verb"}]}`,
 
-    dictation: `You are an English coach for A1 adult learners. Select 5 short clear sentences from this transcript ideal for dictation. Prioritize natural everyday language. Max 10 words each.
-Return ONLY valid JSON, no markdown: {"exercises":[{"text":"Have you ever been here before?","difficulty":"easy","focus":"question form"}]}`,
+    dictation: `You are an English coach for A1 adult learners. Select 5 sentences or short phrases from this transcript ideal for dictation practice. They can be dramatic, colloquial, or emotional — just clear enough to write down. Max 15 words each. If the transcript has fragmented lines, combine adjacent fragments into one natural sentence.
+Return ONLY valid JSON, no markdown: {"exercises":[{"text":"You are so gonna regret crossing me.","difficulty":"medium","focus":"future with going to"}]}`,
 
     loop_drill: `You are an English coach for A1 adult learners. Identify 5 phrases from this transcript ideal for loop shadowing — rhythmically interesting, natural stress, useful in real life. Must be exact quotes from the transcript.
 Return ONLY valid JSON, no markdown: {"exercises":[{"text":"I was wondering if you could help me","reason":"polite request","stress_words":["wondering","help"]}]}`,
@@ -197,14 +220,14 @@ Return ONLY valid JSON, no markdown: {"exercises":[{"text":"I don't know what te
 app.post('/api/sessions', async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase not configured yet' });
 
-  const { student_name, video_url, video_id, video_title, transcript, notes } = req.body;
+  const { student_name, video_url, video_id, video_title, transcript, notes, exercises } = req.body;
   if (!student_name || !video_url) {
     return res.status(400).json({ error: 'Missing student_name or video_url' });
   }
 
   const { data, error } = await supabase
     .from('shadowing_sessions')
-    .insert([{ student_name, video_url, video_id, video_title, transcript, notes, created_at: new Date().toISOString() }])
+    .insert([{ student_name, video_url, video_id, video_title, transcript, notes, exercises: exercises || null, created_at: new Date().toISOString() }])
     .select()
     .single();
 
