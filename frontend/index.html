@@ -520,6 +520,19 @@
     <span id="statusText"></span>
   </div>
 
+  <!-- Sessions preview (visible before video load) -->
+  <div id="sessionsPreview" style="display:none;margin-bottom:20px">
+    <div class="panel-card">
+      <div class="panel-header">
+        <span class="panel-title">Saved Sessions</span>
+        <span class="source-badge" id="sessionsStudentBadge" style="background:rgba(71,255,232,0.15);color:var(--accent2)"></span>
+      </div>
+      <div class="sessions-list" id="sessionsPreviewList">
+        <div class="empty-state">No sessions yet.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Main grid (hidden until video loaded) -->
   <div class="main-grid" id="mainGrid" style="display:none">
 
@@ -1146,6 +1159,54 @@ function showStatus(msg, isError) {
 document.getElementById('urlInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') loadVideo();
 });
+
+// Carica sessioni appena l'utente scrive il nome studente
+document.getElementById('studentInput').addEventListener('input', function() {
+  const name = this.value.trim();
+  if (name.length >= 2) {
+    loadSessionsPreview(name);
+  } else {
+    document.getElementById('sessionsPreview').style.display = 'none';
+  }
+});
+
+async function loadSessionsPreview(student) {
+  try {
+    const res = await fetch(`${BACKEND}/api/sessions?student=${encodeURIComponent(student)}`);
+    const data = await res.json();
+    const sessions = data.sessions || [];
+    const preview = document.getElementById('sessionsPreview');
+    const list = document.getElementById('sessionsPreviewList');
+    const badge = document.getElementById('sessionsStudentBadge');
+    
+    badge.textContent = student;
+    
+    if (!sessions.length) {
+      list.innerHTML = '<div class="empty-state">No sessions for this student yet.</div>';
+    } else {
+      list.innerHTML = '';
+      sessions.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'session-item fade-in';
+        const date = new Date(s.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+        div.innerHTML = `
+          <div class="session-dot"></div>
+          <div class="session-info">
+            <div class="session-title">${s.video_title || s.video_id}</div>
+            <div class="session-meta">${date}${s.notes ? ' · ' + s.notes.substring(0,40) : ''}</div>
+          </div>
+          <button style="padding:4px 10px;font-size:0.72rem;flex-shrink:0">▶ Load</button>
+        `;
+        div.querySelector('button').addEventListener('click', () => {
+          document.getElementById('urlInput').value = s.video_url;
+          loadVideo();
+        });
+        list.appendChild(div);
+      });
+    }
+    preview.style.display = 'block';
+  } catch { /* silent */ }
+}
 </script>
 </body>
 </html>
