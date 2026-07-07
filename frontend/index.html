@@ -1192,7 +1192,6 @@ async function saveSession() {
     video_url: document.getElementById('urlInput').value.trim(),
     video_id: currentVideoId,
     video_title: document.getElementById('videoTitleInput').value.trim() || null,
-    transcript,
     notes: document.getElementById('notesInput').value.trim() || null,
     exercises: Object.keys(exerciseCache).length > 0 ? exerciseCache : null
   };
