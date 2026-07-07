@@ -9,21 +9,21 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ShadowLab">
-<meta name="theme-color" content="#0d0d0f">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#1a56b0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0d0f;
-    --surface: #16161a;
-    --surface2: #1e1e24;
-    --border: #2a2a35;
-    --accent: #e8ff47;
+    --bg: #1a56b0;
+    --surface: #1e65cc;
+    --surface2: #2272e0;
+    --border: #4a8fe8;
+    --accent: #B22234;
     --accent2: #47ffe8;
     --accent3: #ff6b47;
     --text: #f0f0f5;
     --text-dim: #7a7a8a;
-    --highlight-bg: rgba(232,255,71,0.15);
-    --highlight-border: #e8ff47;
+    --highlight-bg: rgba(178,34,52,0.15);
+    --highlight-border: #B22234;
     --radius: 12px;
   }
 
@@ -33,7 +33,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -44,8 +44,8 @@
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
@@ -74,7 +74,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
   }
-  .logo h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; }
+  .logo h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
   .logo span { color: var(--accent); }
 
   .student-selector {
@@ -87,7 +87,7 @@
     color: var(--text);
     padding: 8px 12px;
     border-radius: 8px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
     outline: none;
     transition: border-color 0.2s;
@@ -109,11 +109,11 @@
 
   button {
     background: var(--accent);
-    color: #0d0d0f;
+    color: #ffffff;
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
@@ -224,7 +224,7 @@
   }
   .speed-btn.active {
     background: var(--accent);
-    color: #0d0d0f;
+    color: #ffffff;
     border-color: var(--accent);
   }
 
@@ -261,7 +261,7 @@
     font-size: 0.7rem;
     padding: 2px 8px;
     border-radius: 20px;
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
   }
   .source-badge.youtube { background: rgba(255,0,0,0.15); color: #ff6b6b; }
   .source-badge.gemini  { background: rgba(71,255,232,0.15); color: var(--accent2); }
@@ -293,14 +293,14 @@
     border-left: 2px solid var(--highlight-border);
   }
   .line-time {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
     font-size: 0.7rem;
     color: var(--text-dim);
     min-width: 38px;
     padding-top: 2px;
     flex-shrink: 0;
   }
-  .transcript-line.active .line-time { color: var(--accent); }
+  .transcript-line.active .line-time { color: #e05568; }
   .line-text {
     font-size: 0.88rem;
     line-height: 1.5;
@@ -320,7 +320,7 @@
   .loop-info {
     font-size: 0.78rem;
     color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
     flex: 1;
   }
   .loop-count {
@@ -354,7 +354,7 @@
   }
   .ex-tab.active {
     background: var(--accent);
-    color: #0d0d0f;
+    color: #ffffff;
     border-color: var(--accent);
   }
 
@@ -381,7 +381,7 @@
   .ex-item .ex-answer {
     display: none;
     color: var(--accent);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
     font-size: 0.8rem;
     margin-top: 4px;
   }
@@ -393,12 +393,12 @@
   }
   .stress-words { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
   .stress-tag {
-    background: rgba(232,255,71,0.12);
+    background: rgba(207,16,32,0.2);
     color: var(--accent);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.72rem;
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
   }
 
   /* ── Sessions ── */
@@ -439,7 +439,7 @@
   .session-meta {
     font-size: 0.72rem;
     color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
   }
 
   .empty-state {
@@ -468,7 +468,7 @@
     color: var(--text);
     padding: 8px 12px;
     border-radius: 8px;
-    font-family: 'DM Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
     font-size: 0.8rem;
     resize: vertical;
     min-height: 60px;
@@ -483,9 +483,9 @@
     font-size: 0.7rem;
     padding: 2px 8px;
     border-radius: 20px;
-    background: rgba(232,255,71,0.1);
-    color: var(--accent);
-    font-family: 'DM Mono', monospace;
+    background: rgba(178,34,52,0.15);
+    color: #e05568;
+    font-family: 'Source Code Pro', monospace;
   }
 
   /* ── Animations ── */
@@ -878,11 +878,11 @@ async function addVocabInput(existingData) {
         const ex = data.exercises[0];
         const div = document.createElement('div');
         div.className = 'ex-item fade-in';
-        div.style.borderColor = 'var(--accent2)';
+        div.style.borderColor = '#ffffff';
         div.innerHTML = `
           <div class="ex-sentence" style="font-weight:700;font-size:1rem">${ex.word}</div>
           <div class="ex-meta" style="margin:4px 0">${ex.definition}</div>
-          <div class="ex-answer" style="display:block;font-size:0.8rem;color:var(--text-dim);font-family:'DM Mono',monospace">"<em>${ex.transcript_example || ex.example}</em>"</div>`;
+          <div class="ex-answer" style="display:block;font-size:0.8rem;color:var(--text-dim);font-family:'Source Code Pro',monospace">"<em>${ex.transcript_example || ex.example}</em>"</div>`;
         // Inserisci prima del campo input
         c.insertBefore(div, row);
         document.getElementById('vocabCustomInput').value = '';
@@ -901,7 +901,7 @@ function updateLoopBtn() {
   const btn = document.getElementById('loopBtn');
   if (loopActive && loopLine !== null) {
     btn.style.background = 'var(--accent)';
-    btn.style.color = '#0d0d0f';
+    btn.style.color = '#ffffff';
     btn.textContent = '⟳ Loop ON';
   } else {
     btn.style.background = '';
@@ -1016,7 +1016,7 @@ function renderExercises(data, type) {
         ${item.transcript_line ? `<div class="ex-meta" style="margin-top:4px">From video: "<em>${item.transcript_line}</em>"</div>` : ''}
       </div>`;
     }).join('');
-    c.innerHTML = `<div class="ex-item fade-in" style="border-color:rgba(232,255,71,0.3)">
+    c.innerHTML = `<div class="ex-item fade-in" style="border-color:rgba(178,34,52,0.4)">
       <div style="font-size:0.9rem;font-weight:700;color:var(--accent)">${data.structure || 'Grammar focus'}</div>
       <div style="font-size:0.82rem;margin-top:6px;color:var(--text-dim)">${data.explanation || ''}</div>
       ${subItems}
@@ -1114,7 +1114,7 @@ function renderExercises(data, type) {
       div.innerHTML = `
         <div class="ex-sentence" style="font-weight:700;font-size:1rem">${ex.word}</div>
         <div class="ex-meta" style="margin:4px 0">${ex.definition}</div>
-        <div class="ex-answer" style="display:block;font-size:0.8rem;color:var(--text-dim);font-family:'DM Mono',monospace">"<em>${ex.transcript_example || ex.example}</em>"</div>`;
+        <div class="ex-answer" style="display:block;font-size:0.8rem;color:var(--text-dim);font-family:'Source Code Pro',monospace">"<em>${ex.transcript_example || ex.example}</em>"</div>`;
 
     } else if (type === 'qa') {
       div.innerHTML = `
@@ -1134,8 +1134,8 @@ function renderExercises(data, type) {
           ${item.transcript_line ? `<div class="ex-meta">From video: "${item.transcript_line}"</div>` : ''}
         </div>`;
       }).join('');
-      div.style.background = 'rgba(232,255,71,0.05)';
-      div.style.borderColor = 'rgba(232,255,71,0.3)';
+      div.style.background = 'rgba(178,34,52,0.08)';
+      div.style.borderColor = 'rgba(178,34,52,0.4)';
       div.innerHTML = `
         <div style="font-size:0.9rem;font-weight:700;color:var(--accent)">${ex.structure || 'Grammar focus'}</div>
         <div style="font-size:0.82rem;margin-top:4px;color:var(--text-dim)">${ex.explanation || ''}</div>
