@@ -502,6 +502,9 @@
       <div class="logo-icon">🎙</div>
       <h1>Shadow<span>Lab</span></h1>
     </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="wakeBtn" class="secondary" onclick="wakeBackend()" style="padding:6px 12px;font-size:0.75rem">⚡ Wake up</button>
+    </div>
     <div class="student-selector">
       <label>Student</label>
       <input type="text" id="studentInput" placeholder="Student name..." style="width:160px">
@@ -1217,7 +1220,13 @@ async function loadSessions() {
     const res = await fetch(url);
     const data = await res.json();
     renderSessions(data.sessions || []);
-  } catch { /* silent */ }
+  } catch(err) {
+    console.error('Sessions load error:', err);
+    const preview = document.getElementById('sessionsPreview');
+    const list = document.getElementById('sessionsPreviewList');
+    list.innerHTML = '<div class="empty-state">⏳ Backend waking up... retry in a few seconds</div>';
+    preview.style.display = 'block';
+  }
 }
 
 function renderSessions(sessions) {
@@ -1270,6 +1279,29 @@ document.getElementById('urlInput').addEventListener('keydown', e => {
 });
 
 // Carica sessioni appena l'utente scrive il nome studente
+async function wakeBackend() {
+  const btn = document.getElementById('wakeBtn');
+  btn.textContent = '⏳ Waking...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${BACKEND}/health`);
+    if (res.ok) {
+      btn.textContent = '✓ Ready!';
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.color = 'var(--accent)';
+      setTimeout(() => {
+        btn.textContent = '⚡ Wake up';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        btn.disabled = false;
+      }, 3000);
+    }
+  } catch {
+    btn.textContent = '✗ Retry';
+    btn.disabled = false;
+  }
+}
+
 document.getElementById('studentInput').addEventListener('input', function() {
   const name = this.value.trim();
   if (name.length >= 2) {
