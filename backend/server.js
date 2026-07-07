@@ -147,7 +147,7 @@ app.post('/api/exercises', async (req, res) => {
     if (!customPhrase) return res.status(400).json({ error: 'Missing customPhrase' });
     try {
       const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5',
         max_tokens: 400,
         messages: [{
           role: 'user',
@@ -200,7 +200,7 @@ Return ONLY valid JSON, no markdown: {"exercises":[{"text":"I don't know what te
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5',
       max_tokens: 1500,
       messages: [{
         role: 'user',
