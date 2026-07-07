@@ -238,7 +238,7 @@ app.post('/api/sessions', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: error.cause });
   res.json({ success: true, session: data });
 });
 
