@@ -237,8 +237,12 @@ app.post('/api/sessions', async (req, res) => {
     .insert([{ student_name, video_url, video_id, video_title, transcript, notes, exercises: exercises || null, created_at: new Date().toISOString() }])
     .select()
     .single();
-
-  if (error) return res.status(500).json({ error: error.cause });
+ if (error){
+console.log(error);
+   console.log(error.message);
+   console.log(error.cause);
+ }
+  if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, session: data });
 });
 
