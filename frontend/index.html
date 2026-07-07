@@ -1283,23 +1283,40 @@ async function wakeBackend() {
   const btn = document.getElementById('wakeBtn');
   btn.textContent = '⏳ Waking...';
   btn.disabled = true;
-  try {
-    const res = await fetch(`${BACKEND}/health`);
-    if (res.ok) {
-      btn.textContent = '✓ Ready!';
-      btn.style.borderColor = 'var(--accent)';
-      btn.style.color = 'var(--accent)';
-      setTimeout(() => {
-        btn.textContent = '⚡ Wake up';
-        btn.style.borderColor = '';
-        btn.style.color = '';
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  const tryWake = async () => {
+    attempts++;
+    btn.textContent = `⏳ Waking (${attempts}/${maxAttempts})...`;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${BACKEND}/health`, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        btn.textContent = '✓ Ready!';
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.color = 'var(--accent)';
         btn.disabled = false;
-      }, 3000);
+        setTimeout(() => {
+          btn.textContent = '⚡ Wake up';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 3000);
+        return;
+      }
+    } catch(e) {}
+    
+    if (attempts < maxAttempts) {
+      setTimeout(tryWake, 5000);
+    } else {
+      btn.textContent = '✗ Retry';
+      btn.disabled = false;
     }
-  } catch {
-    btn.textContent = '✗ Retry';
-    btn.disabled = false;
-  }
+  };
+  
+  tryWake();
 }
 
 document.getElementById('studentInput').addEventListener('input', function() {
