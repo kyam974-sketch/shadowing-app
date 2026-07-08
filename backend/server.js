@@ -237,11 +237,26 @@ app.post('/api/sessions', async (req, res) => {
     .insert([{ student_name, video_url, video_id, video_title, transcript, notes, exercises: exercises || null, created_at: new Date().toISOString() }])
     .select()
     .single();
- if (error){
-console.log(error);
-   console.log(error.message);
-   console.log(error.cause);
- }
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true, session: data });
+});
+
+// PATCH /api/sessions/:id
+app.patch('/api/sessions/:id', async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: 'Supabase not configured' });
+  const { id } = req.params;
+  const { notes, video_title, exercises } = req.body;
+  const updates = {};
+  if (notes !== undefined) updates.notes = notes;
+  if (video_title !== undefined) updates.video_title = video_title;
+  if (exercises !== undefined) updates.exercises = exercises;
+  const { data, error } = await supabase
+    .from('shadowing_sessions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, session: data });
 });
