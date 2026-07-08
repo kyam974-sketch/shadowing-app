@@ -604,7 +604,8 @@
           <textarea id="notesInput" placeholder="Session notes…"></textarea>
           <div class="save-actions">
             <button class="secondary" onclick="toggleSaveBar()">Cancel</button>
-            <button onclick="saveSession()">Save session</button>
+            <button id="updateSessionBtn" class="secondary" onclick="updateSession()" style="display:none">Update</button>
+            <button onclick="saveSession()">Save new</button>
           </div>
         </div>
         <div class="sessions-list" id="sessionsList">
@@ -665,6 +666,8 @@ let loopTarget = 3;
 let syncInterval = null;
 let exerciseCache = {};
 let pendingExerciseCache = null;
+let currentSessionId = null;
+let pendingSessionId = null;
 let currentExType = 'fill_blank';
 
 // ── YouTube Player ─────────────────────────────────────────────────────────
@@ -754,6 +757,12 @@ async function loadVideo() {
     })).filter(seg => seg.text && seg.text !== 'undefined');
     currentVideoId = data.videoId;
     exerciseCache = {};
+    currentSessionId = null; // reset sessione corrente
+    document.getElementById('exercisesPanel').classList.remove('show');
+    document.getElementById('exContent').innerHTML = '<div class="empty-state">Click "Generate" to create exercises from this video.</div>';
+    document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+    document.querySelector('.ex-tab').classList.add('active');
+    currentExType = 'fill_blank';
 
     // Source badge
     const badge = document.getElementById('sourceBadge');
@@ -773,6 +782,12 @@ async function loadVideo() {
 
     // Load sessions for this student
     loadSessions();
+
+    // Ripristina sessionId se disponibile
+    if (pendingSessionId) {
+      currentSessionId = pendingSessionId;
+      pendingSessionId = null;
+    }
 
     // Ripristina cache esercizi se disponibile
     if (pendingExerciseCache) {
@@ -1180,6 +1195,32 @@ function renderExercises(data, type) {
 // ── Sessions ──────────────────────────────────────────────────────────────────
 function toggleSaveBar() {
   document.getElementById('saveBar').classList.toggle('show');
+  // Mostra Update solo se c'è una sessione corrente
+  const updateBtn = document.getElementById('updateSessionBtn');
+  if (updateBtn) updateBtn.style.display = currentSessionId ? 'flex' : 'none';
+}
+
+async function updateSession() {
+  if (!currentSessionId) return;
+  const notes = document.getElementById('notesInput').value.trim() || null;
+  const videoTitle = document.getElementById('videoTitleInput').value.trim() || null;
+  try {
+    const res = await fetch(`${BACKEND}/api/sessions/${currentSessionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        notes,
+        video_title: videoTitle,
+        exercises: Object.keys(exerciseCache).length > 0 ? exerciseCache : null
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toggleSaveBar();
+    loadSessions();
+  } catch (err) {
+    alert('Error updating session: ' + err.message);
+  }
 }
 
 async function saveSession() {
@@ -1249,6 +1290,7 @@ function renderSessions(sessions) {
     div.addEventListener('click', () => {
       document.getElementById('urlInput').value = s.video_url;
       if (s.exercises) pendingExerciseCache = s.exercises;
+      pendingSessionId = s.id;
       loadVideo();
     });
     list.appendChild(div);
@@ -1356,6 +1398,8 @@ async function loadSessionsPreview(student) {
         `;
         div.querySelector('button').addEventListener('click', () => {
           document.getElementById('urlInput').value = s.video_url;
+          if (s.exercises) pendingExerciseCache = s.exercises;
+          pendingSessionId = s.id;
           loadVideo();
         });
         list.appendChild(div);
