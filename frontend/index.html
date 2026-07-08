@@ -1286,7 +1286,17 @@ function renderSessions(sessions) {
         <div class="session-title">${s.video_title || s.video_id}</div>
         <div class="session-meta">${s.student_name} · ${date}</div>
       </div>
+      <button class="del-btn" data-id="${s.id}" style="background:transparent;border:none;color:var(--text-dim);font-size:1rem;padding:4px 8px;cursor:pointer;flex-shrink:0" title="Delete">🗑</button>
     `;
+    div.querySelector('.del-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this session?')) return;
+      try {
+        await fetch(`${BACKEND}/api/sessions/${s.id}`, { method: 'DELETE' });
+        loadSessions();
+        if (currentSessionId === s.id) currentSessionId = null;
+      } catch(err) { alert('Error: ' + err.message); }
+    });
     div.addEventListener('click', () => {
       document.getElementById('urlInput').value = s.video_url;
       if (s.exercises) pendingExerciseCache = s.exercises;
@@ -1394,13 +1404,24 @@ async function loadSessionsPreview(student) {
             <div class="session-title">${s.video_title || s.video_id}</div>
             <div class="session-meta">${date}${s.notes ? ' · ' + s.notes.substring(0,40) : ''}</div>
           </div>
-          <button style="padding:4px 10px;font-size:0.72rem;flex-shrink:0">▶ Load</button>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="load-btn" style="padding:4px 10px;font-size:0.72rem">▶ Load</button>
+            <button class="del-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 8px;font-size:0.85rem;border-radius:6px">🗑</button>
+          </div>
         `;
-        div.querySelector('button').addEventListener('click', () => {
+        div.querySelector('.load-btn').addEventListener('click', () => {
           document.getElementById('urlInput').value = s.video_url;
           if (s.exercises) pendingExerciseCache = s.exercises;
           pendingSessionId = s.id;
           loadVideo();
+        });
+        div.querySelector('.del-btn').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm('Delete this session?')) return;
+          try {
+            await fetch(`${BACKEND}/api/sessions/${s.id}`, { method: 'DELETE' });
+            loadSessionsPreview(document.getElementById('studentInput').value.trim());
+          } catch(err) { alert('Error: ' + err.message); }
         });
         list.appendChild(div);
       });
