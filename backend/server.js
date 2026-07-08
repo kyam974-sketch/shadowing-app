@@ -261,6 +261,15 @@ app.patch('/api/sessions/:id', async (req, res) => {
   res.json({ success: true, session: data });
 });
 
+// DELETE /api/sessions/:id
+app.delete('/api/sessions/:id', async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: 'Supabase not configured' });
+  const { id } = req.params;
+  const { error } = await supabase.from('shadowing_sessions').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
 // GET /api/sessions?student=...
 app.get('/api/sessions', async (req, res) => {
   if (!supabase) return res.json({ sessions: [] });
