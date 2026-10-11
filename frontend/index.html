@@ -37,6 +37,7 @@ button{background:var(--accent);color:white;border:1px solid transparent;border-
 @media(max-width:1000px){.main-grid{grid-template-columns:minmax(0,1fr)}.transcript-list{max-height:380px}.app{padding:24px}.transcript-panel{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}}
 @media(max-width:700px){.app{padding:20px 16px 48px}header{gap:16px;margin-bottom:24px}.logo{width:100%}.student-selector{flex:1}.student-selector input{width:100%!important}.reading-control{flex:1}#wakeBtn{min-width:100px}.url-bar{flex-direction:column}.load-card{padding:18px}.transcript-panel{display:flex}.panel-header{padding:16px}.ex-tabs,.ex-content{padding:16px}.controls{padding:14px}.workspace-intro p{font-size:.95rem}.ex-item{padding:16px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.app.has-video .workspace-intro{display:none}.app.has-video header{margin-bottom:20px}.app.has-video .load-card{padding:16px 20px}.session-item .load-btn{font-size:.9rem!important}
 </style>
 </head>
 <body>
@@ -326,9 +327,11 @@ async function loadVideo() {
     exerciseCache = {};
     currentSessionId = null; // reset sessione corrente
     document.getElementById('exercisesPanel').classList.remove('show');
+    updateExerciseToggle(false);
     document.getElementById('exContent').innerHTML = '<div class="empty-state">Click "Generate" to create exercises from this video.</div>';
     document.querySelectorAll('.ex-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
     document.querySelector('.ex-tab').classList.add('active');
+    document.querySelector('.ex-tab').setAttribute('aria-pressed', 'true');
     currentExType = 'fill_blank';
 
     // Source badge
@@ -339,6 +342,8 @@ async function loadVideo() {
     renderTranscript();
     showStatus('', false);
     document.getElementById('mainGrid').style.display = 'grid';
+    document.getElementById('workspace').classList.add('has-video');
+    document.getElementById('sessionsPreview').style.display = 'none';
 
     // Create player
     if (typeof YT !== 'undefined' && YT.Player) {
@@ -367,7 +372,9 @@ async function loadVideo() {
   updateExerciseToggle(true);
         // Attiva il tab corrispondente
         document.querySelectorAll('.ex-tab').forEach(btn => {
-          btn.classList.toggle('active', btn.getAttribute('onclick').includes(firstType));
+          const selected = btn.getAttribute('onclick').includes(firstType);
+          btn.classList.toggle('active', selected);
+          btn.setAttribute('aria-pressed', String(selected));
         });
         currentExType = firstType;
         renderExercises(exerciseCache[firstType], firstType);
@@ -961,6 +968,7 @@ async function loadSessionsPreview(student) {
   try {
     const res = await fetch(`${BACKEND}/api/sessions?student=${encodeURIComponent(student)}`);
     const data = await res.json();
+    if (document.getElementById('studentInput').value.trim() !== student || document.getElementById('workspace').classList.contains('has-video')) return;
     const sessions = data.sessions || [];
     const preview = document.getElementById('sessionsPreview');
     const list = document.getElementById('sessionsPreviewList');
@@ -987,6 +995,7 @@ async function loadSessionsPreview(student) {
             <button class="del-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 8px;font-size:0.85rem;border-radius:6px">🗑</button>
           </div>
         `;
+        div.querySelector('.session-open').addEventListener('click', () => div.querySelector('.load-btn').click());
         div.querySelector('.load-btn').addEventListener('click', () => {
           document.getElementById('urlInput').value = s.video_url;
           if (s.exercises) pendingExerciseCache = s.exercises;
