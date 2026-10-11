@@ -9,517 +9,71 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ShadowLab">
-<meta name="theme-color" content="#1a56b0">
+<meta name="theme-color" content="#f3f6f7">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #1a56b0;
-    --surface: #1e65cc;
-    --surface2: #2272e0;
-    --border: #4a8fe8;
-    --accent: #B22234;
-    --accent2: #47ffe8;
-    --accent3: #ff6b47;
-    --text: #f0f0f5;
-    --text-dim: #7a7a8a;
-    --highlight-bg: rgba(178,34,52,0.15);
-    --highlight-border: #B22234;
-    --radius: 12px;
-  }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { overflow-x: hidden; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── Grid noise background ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
-
-  /* ── Header ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .logo h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
-  .logo span { color: var(--accent); }
-
-  .student-selector {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .student-selector label { font-size: 0.8rem; color: var(--text-dim); }
-  select, input[type=text] {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  select:focus, input[type=text]:focus { border-color: var(--accent); }
-  select option { background: var(--surface2); }
-
-  /* ── URL bar ── */
-  .url-bar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-  .url-bar input {
-    flex: 1;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-  }
-
-  button {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: transform 0.1s, opacity 0.2s;
-    white-space: nowrap;
-  }
-  button:hover { opacity: 0.9; }
-  button:active { transform: scale(0.97); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button.secondary {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  button.secondary:hover { border-color: var(--accent); color: var(--accent); }
-  button.danger { background: var(--accent3); }
-
-  /* ── Status ── */
-  .status {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding: 10px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-  }
-  .status.show { display: flex; }
-  .status.error { border-color: var(--accent3); color: var(--accent3); }
-  .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Main layout ── */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 20px;
-    max-width: 100%;
-  }
-  @media (max-width: 800px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
-  .exercises-row {
-    margin-top: 0;
-    width: 100%;
-  }
-
-  /* ── Video panel ── */
-  .video-panel { display: flex; flex-direction: column; gap: 16px; }
-
-  .video-wrapper {
-    position: relative;
-    padding-top: 56.25%;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .video-wrapper iframe {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    border: none;
-  }
-  .video-placeholder {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 12px;
-    color: var(--text-dim);
-  }
-  .video-placeholder .ph-icon { font-size: 3rem; opacity: 0.3; }
-  .video-placeholder p { font-size: 0.85rem; }
-
-  /* ── Controls ── */
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .speed-group {
-    display: flex; align-items: center; gap: 6px;
-    margin-left: auto;
-  }
-  .speed-group label { font-size: 0.78rem; color: var(--text-dim); }
-  .speed-btn {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
-  .speed-btn.active {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-  }
-
-  /* ── Transcript panel ── */
-  .transcript-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .panel-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .panel-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-  }
-  .source-badge {
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-family: 'Source Code Pro', monospace;
-  }
-  .source-badge.youtube { background: rgba(255,0,0,0.15); color: #ff6b6b; }
-  .source-badge.gemini  { background: rgba(71,255,232,0.15); color: var(--accent2); }
-
-  /* ── Transcript lines ── */
-  .transcript-list {
-    max-height: 360px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .transcript-line {
-    display: flex;
-    gap: 10px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s;
-    align-items: flex-start;
-  }
-  .transcript-line:hover { background: var(--surface2); }
-  .transcript-line.active {
-    background: var(--highlight-bg);
-    border-left: 2px solid var(--highlight-border);
-  }
-  .line-time {
-    font-family: 'Source Code Pro', monospace;
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    min-width: 38px;
-    padding-top: 2px;
-    flex-shrink: 0;
-  }
-  .transcript-line.active .line-time { color: #e05568; }
-  .line-text {
-    font-size: 0.88rem;
-    line-height: 1.5;
-  }
-  .line-text .word { display: inline; }
-  .line-text .word.lit { color: var(--accent); }
-
-  /* ── Loop controls ── */
-  .loop-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-top: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .loop-info {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    font-family: 'Source Code Pro', monospace;
-    flex: 1;
-  }
-  .loop-count {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    display: flex; align-items: center; gap: 4px;
-  }
-  .loop-count select { padding: 4px 8px; font-size: 0.75rem; }
-
-  /* ── Exercises ── */
-  .exercises-panel { display: none; flex-direction: column; gap: 0; }
-  .exercises-panel.show { display: flex; }
-
-  .ex-tabs {
-    display: flex;
-    gap: 6px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-  .ex-tabs::-webkit-scrollbar { display: none; }
-  .ex-tab {
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    padding: 5px 12px;
-    font-size: 0.75rem;
-  }
-  .ex-tab.active {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-  }
-
-  .ex-content {
-    padding: 14px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-    max-height: 400px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .ex-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-  .ex-item .ex-sentence { margin-bottom: 6px; }
-  .ex-item .ex-answer {
-    display: none;
-    color: var(--accent);
-    font-family: 'Source Code Pro', monospace;
-    font-size: 0.8rem;
-    margin-top: 4px;
-  }
-  /* ex-answer revealed on tap */
-  .ex-item .ex-meta {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-  .stress-words { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-  .stress-tag {
-    background: rgba(207,16,32,0.2);
-    color: var(--accent);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-family: 'Source Code Pro', monospace;
-  }
-
-  /* ── Sessions ── */
-  .sessions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    max-height: 260px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .session-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .session-item:hover { background: var(--surface2); }
-  .session-item:last-child { border-bottom: none; }
-  .session-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent2);
-    flex-shrink: 0;
-  }
-  .session-info { flex: 1; min-width: 0; }
-  .session-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .session-meta {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-family: 'Source Code Pro', monospace;
-  }
-
-  .empty-state {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 0.82rem;
-  }
-
-  /* ── Save bar ── */
-  .save-bar {
-    display: none;
-    padding: 12px 14px;
-    border-top: 1px solid var(--border);
-    gap: 8px;
-    flex-direction: column;
-  }
-  .save-bar.show { display: flex; }
-  .save-bar input {
-    width: 100%;
-    font-size: 0.82rem;
-  }
-  .save-bar textarea {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Source Code Pro', monospace;
-    font-size: 0.8rem;
-    resize: vertical;
-    min-height: 60px;
-    outline: none;
-  }
-  .save-bar textarea:focus { border-color: var(--accent); }
-  .save-actions { display: flex; gap: 8px; }
-  .save-actions button { flex: 1; }
-
-  .tag {
-    display: inline-block;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: rgba(178,34,52,0.15);
-    color: #e05568;
-    font-family: 'Source Code Pro', monospace;
-  }
-
-  /* ── Animations ── */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeIn 0.3s ease forwards; }
+:root { --bg:#f3f6f7; --surface:#ffffff; --surface2:#edf3f4; --border:#c3d0d5; --accent:#08675f; --accent2:#08675f; --accent3:#ad3326; --text:#172e3c; --text-dim:#4d6270; --highlight-bg:#e1f2ed; --highlight-border:#08675f; --radius:16px; font-size:16px; color-scheme:light; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.6;min-height:100vh}
+.app{max-width:1320px;margin:auto;padding:30px 32px 64px}
+header{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.logo{display:flex;align-items:center;gap:12px;margin-right:auto}.logo-icon{background:var(--accent);color:white;border-radius:14px;width:48px;height:48px;display:grid;place-items:center;font-size:25px}.logo h1{font-size:1.65rem;letter-spacing:-.06em;line-height:1.2}.logo span{color:var(--accent)}.brand-caption{font-size:.85rem;color:var(--text-dim);margin-top:4px;letter-spacing:0}
+.student-selector,.reading-control{display:flex;flex-direction:column;gap:5px}.student-selector label,.reading-control label{font-size:.85rem;font-weight:600;color:var(--text-dim)}
+.workspace-intro{margin-bottom:24px}.workspace-intro h2{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.04em;line-height:1.3;margin-bottom:8px}.workspace-intro p{color:var(--text-dim)}
+.load-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:24px}.load-card>label{display:block;font-weight:700;margin-bottom:8px}.url-bar{display:flex;gap:12px}.url-bar input{flex:1;min-width:0}.field-help{font-size:.9rem;color:var(--text-dim);margin-top:10px}
+input[type=text],select,textarea{background:var(--surface);border:1px solid #879ca6;color:var(--text);padding:10px 14px;border-radius:9px;font:inherit;min-height:46px;max-width:100%}input::placeholder,textarea::placeholder{color:var(--text-dim);opacity:1}textarea{resize:vertical;width:100%;min-height:100px}
+button{background:var(--accent);color:white;border:1px solid transparent;border-radius:9px;padding:10px 16px;font:600 .95rem/1.4 Inter,system-ui,sans-serif;min-height:44px;cursor:pointer;transition:background .15s,border-color .15s;white-space:normal}button:hover{background:#064e49}button.secondary{background:var(--surface);border-color:#879ca6;color:var(--text)}button.secondary:hover{background:var(--surface2);border-color:var(--accent)}button:disabled{opacity:.6;cursor:wait}button.danger{background:var(--accent3)}
+:focus-visible{outline:3px solid #1b6da8;outline-offset:3px}.skip-link{position:fixed;top:-100px;left:16px;background:white;color:var(--text);padding:12px;z-index:20}.skip-link:focus{top:12px}
+.status{display:none;gap:12px;align-items:center;background:white;padding:14px 18px;border:1px solid var(--border);border-radius:12px;margin-bottom:24px;color:var(--text-dim)}.status.show{display:flex}.status.error{color:var(--accent3);border-color:var(--accent3)}.spinner{width:20px;height:20px;flex-shrink:0;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,1fr);gap:24px;align-items:start}.video-panel,.transcript-panel{min-width:0}.video-wrapper{position:relative;padding-bottom:56.25%;height:0;background:#172e3c;border-radius:16px;overflow:hidden}.video-wrapper iframe,.video-wrapper #ytPlayer{position:absolute;inset:0;width:100%;height:100%}.video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:12px}.ph-icon{font-size:3rem}
+.controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:18px;background:white;border:1px solid var(--border);border-radius:14px;margin-top:14px}.speed-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;border-top:1px solid var(--border);padding-top:14px}.speed-group label{color:var(--text-dim);font-size:.95rem;margin-right:8px}.speed-btn{background:var(--surface2);color:var(--text);border-color:#879ca6;min-width:60px}.speed-btn:hover{background:#dbe9e9}.speed-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+.panel-card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:0 3px 12px #172e3c05}.panel-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--border)}.panel-title{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}.source-badge{padding:4px 9px;border-radius:6px;background:var(--surface2);color:var(--accent);font-size:.8rem;font-weight:600;overflow-wrap:anywhere}.source-badge:empty{display:none}.transcript-panel{display:flex;flex-direction:column;gap:20px}.transcript-list{max-height:430px;overflow:auto;padding:8px;scrollbar-gutter:stable;position:relative}
+.transcript-line{display:flex;gap:14px;width:100%;text-align:left;background:white;color:var(--text);padding:12px 10px;border-radius:8px;border:0;border-left:4px solid transparent;font-weight:400;font-size:1.1rem;line-height:1.65;align-items:baseline}.transcript-line:hover{background:var(--surface2)}.transcript-line.active{background:var(--highlight-bg);border-left-color:var(--accent)}.line-time{font:500 .85rem/1.65 'Source Code Pro',monospace;color:var(--text-dim);flex:0 0 45px}.line-text{min-width:0;overflow-wrap:anywhere}.loop-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:var(--surface2);border-top:1px solid var(--border)}.loop-info{font-size:.9rem;color:var(--text-dim);flex:1;min-width:150px;overflow-wrap:anywhere}.loop-count{display:flex;align-items:center;gap:8px}.loop-count select{min-width:70px}
+.exercises-row{margin-top:28px}.exercises-panel{display:none}.exercises-panel.show{display:block}.ex-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:18px 20px;border-bottom:1px solid var(--border);background:#f8fafb}.ex-tab{background:white;color:var(--text-dim);border-color:#879ca6;font-size:.9rem;min-height:44px}.ex-tab:hover{color:var(--accent);background:var(--surface2)}.ex-tab.active{background:var(--accent);color:white;border-color:var(--accent)}.ex-content{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;padding:20px}.ex-item{background:#f8fafb;border:1px solid var(--border);border-radius:12px;padding:20px;min-width:0;overflow-wrap:anywhere}.ex-sentence{font-size:1.05rem!important;line-height:1.7}.ex-answer{display:none;margin-top:14px;padding:12px;border-left:3px solid var(--accent);background:var(--highlight-bg);color:var(--text);font-size:1rem!important;line-height:1.7}.ex-meta{font-size:.95rem!important;color:var(--text-dim);margin-top:8px;line-height:1.7}.stress-words{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.stress-tag{background:#e1f2ed;color:#08675f;padding:5px 9px;border-radius:6px;font-size:.95rem}.answer-toggle{margin-top:14px;background:white;color:var(--accent);border-color:var(--accent)}.answer-toggle:hover{background:var(--highlight-bg)}
+.sessions-list{max-height:290px;overflow:auto;padding:8px}.session-item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border)}.session-item:last-child{border-bottom:0}.session-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}.session-info{flex:1;min-width:0}.session-title{font-weight:600;overflow-wrap:anywhere}.session-open{color:var(--text);background:transparent;text-align:left;padding:4px 0;width:100%}.session-open:hover{color:var(--accent);background:transparent;text-decoration:underline}.session-meta{font-size:.85rem;color:var(--text-dim)}.del-btn:hover{background:#fdece8!important;color:var(--accent3)!important}.save-bar{display:none;padding:20px;background:var(--surface2);gap:10px}.save-bar.show{display:flex;flex-direction:column}.save-bar label{font-size:.9rem;font-weight:600}.save-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}.empty-state{grid-column:1/-1;padding:28px 20px;color:var(--text-dim);text-align:center;font-size:1rem}
+/* Keep legacy inline control styles readable while saved exercises remain compatible. */
+.panel-header button,#wakeBtn,#vocabInputRow button,.ex-item button{font-size:.95rem!important;padding:10px 14px!important}.loop-count label{font-size:.9rem!important}#vocabCustomInput{font-size:1rem!important;min-width:0}#vocabInputRow{flex-wrap:wrap}.ex-item>div[style*="font-size"]{font-size:1rem!important}
+@media(max-width:1000px){.main-grid{grid-template-columns:minmax(0,1fr)}.transcript-list{max-height:380px}.app{padding:24px}.transcript-panel{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}}
+@media(max-width:700px){.app{padding:20px 16px 48px}header{gap:16px;margin-bottom:24px}.logo{width:100%}.student-selector{flex:1}.student-selector input{width:100%!important}.reading-control{flex:1}#wakeBtn{min-width:100px}.url-bar{flex-direction:column}.load-card{padding:18px}.transcript-panel{display:flex}.panel-header{padding:16px}.ex-tabs,.ex-content{padding:16px}.controls{padding:14px}.workspace-intro p{font-size:.95rem}.ex-item{padding:16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<div class="app">
+<a class="skip-link" href="#workspace">Skip to workspace</a>
+<main class="app" id="workspace" tabindex="-1">
 
   <!-- Header -->
   <header>
     <div class="logo">
       <div class="logo-icon">🎙</div>
-      <h1>Shadow<span>Lab</span></h1>
+      <div><h1>Shadow<span>Lab</span></h1><p class="brand-caption">Listen. Practise. Speak.</p></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <button id="wakeBtn" class="secondary" onclick="wakeBackend()" style="padding:6px 12px;font-size:0.75rem">⚡ Wake up</button>
     </div>
     <div class="student-selector">
-      <label>Student</label>
+      <label for="studentInput">Student</label>
       <input type="text" id="studentInput" placeholder="Student name..." style="width:160px">
     </div>
+    <div class="reading-control"><label for="readingSize">Text size</label><select id="readingSize"><option value="16">Standard</option><option value="18">Large</option><option value="20">Extra large</option></select></div>
   </header>
 
+  <section class="workspace-intro"><h2>Your listening workspace</h2><p>Build confidence with real English, one short clip at a time.</p></section>
   <!-- URL Bar -->
+  <section class="load-card" aria-label="Choose a video">
+  <label for="urlInput">YouTube video</label>
   <div class="url-bar">
-    <input type="text" id="urlInput" placeholder="Paste a YouTube URL… e.g. https://www.youtube.com/watch?v=..." />
-    <button id="loadBtn" onclick="loadVideo()">Load</button>
+    <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=…" />
+    <button id="loadBtn" onclick="loadVideo()">Load video</button>
   </div>
 
+  <p class="field-help">Paste a video link, or enter a student name to reopen a saved session.</p>
+  </section>
+
   <!-- Status -->
-  <div class="status" id="status">
-    <div class="spinner" id="statusSpinner"></div>
+  <div class="status" id="status" role="status" aria-live="polite">
+    <div class="spinner" id="statusSpinner" aria-hidden="true"></div>
     <span id="statusText"></span>
   </div>
 
@@ -552,15 +106,15 @@
 
       <!-- Playback controls -->
       <div class="controls">
-        <button class="secondary" onclick="seekRelative(-5)">⏪ 5s</button>
+        <button class="secondary" aria-label="Back five seconds" onclick="seekRelative(-5)">⏪ 5s</button>
         <button class="secondary" onclick="togglePlay()" id="playPauseBtn">▶ Play</button>
-        <button class="secondary" onclick="seekRelative(5)">5s ⏩</button>
-        <button class="secondary" id="loopBtn" onclick="toggleLoop()">⟳ Loop OFF</button>
+        <button class="secondary" aria-label="Forward five seconds" onclick="seekRelative(5)">5s ⏩</button>
+        <button class="secondary" id="loopBtn" aria-pressed="false" onclick="toggleLoop()">⟳ Loop OFF</button>
         <div class="speed-group">
           <label>Speed</label>
-          <button class="speed-btn active" onclick="setSpeed(0.5, this)">×0.5</button>
-          <button class="speed-btn" onclick="setSpeed(0.75, this)">×0.75</button>
-          <button class="speed-btn" onclick="setSpeed(1, this)">×1</button>
+          <button class="speed-btn active" aria-pressed="true" onclick="setSpeed(0.5, this)">×0.5</button>
+          <button class="speed-btn" aria-pressed="false" onclick="setSpeed(0.75, this)">×0.75</button>
+          <button class="speed-btn" aria-pressed="false" onclick="setSpeed(1, this)">×1</button>
         </div>
       </div>
 
@@ -581,7 +135,7 @@
         <div class="loop-bar">
           <span class="loop-info" id="loopInfo">Tap a line to loop it</span>
           <div class="loop-count">
-            <label style="font-size:0.75rem;color:var(--text-dim)">Loops</label>
+            <label for="loopCountSel">Repeats</label>
             <select id="loopCountSel">
               <option value="2">×2</option>
               <option value="3" selected>×3</option>
@@ -600,8 +154,8 @@
           <button style="padding:4px 10px;font-size:0.75rem" onclick="toggleSaveBar()">+ Save</button>
         </div>
         <div class="save-bar" id="saveBar">
-          <input type="text" id="videoTitleInput" placeholder="Video title (optional)…" />
-          <textarea id="notesInput" placeholder="Session notes…"></textarea>
+          <label for="videoTitleInput">Session title</label><input type="text" id="videoTitleInput" placeholder="Video title (optional)…" />
+          <label for="notesInput">Session notes</label><textarea id="notesInput" placeholder="Session notes…"></textarea>
           <div class="save-actions">
             <button class="secondary" onclick="toggleSaveBar()">Cancel</button>
             <button id="updateSessionBtn" class="secondary" onclick="updateSession()" style="display:none">Update</button>
@@ -622,22 +176,22 @@
       <div class="panel-header">
         <span class="panel-title">Exercises</span>
         <div style="display:flex;gap:6px">
-          <button class="secondary" style="padding:4px 10px;font-size:0.75rem" onclick="toggleExercises()">Show/Hide</button>
+          <button class="secondary" style="padding:4px 10px;font-size:0.75rem" id="exToggleBtn" aria-controls="exercisesPanel" aria-expanded="false" onclick="toggleExercises()">Show exercises</button>
           <button style="padding:4px 10px;font-size:0.75rem" id="genBtn" onclick="generateExercises()">Generate</button>
         </div>
       </div>
       <div class="exercises-panel" id="exercisesPanel">
-        <div class="ex-tabs">
-          <button class="ex-tab active" onclick="switchTab('fill_blank', this)">Fill blank</button>
-          <button class="ex-tab" onclick="switchTab('dictation', this)">Dictation</button>
-          <button class="ex-tab" onclick="switchTab('loop_drill', this)">Loop drill</button>
-          <button class="ex-tab" onclick="switchTab('true_false', this)">True/False</button>
-          <button class="ex-tab" onclick="switchTab('sentence_ordering', this)">Word order</button>
-          <button class="ex-tab" onclick="switchTab('vocabulary', this)">Vocabulary</button>
-          <button class="ex-tab" onclick="switchTab('qa', this)">Q&amp;A</button>
-          <button class="ex-tab" onclick="switchTab('grammar', this)">Grammar</button>
-          <button class="ex-tab" onclick="switchTab('conversation', this)">Conversation</button>
-          <button class="ex-tab" onclick="switchTab('pronunciation', this)">Pronunciation</button>
+        <div class="ex-tabs" role="group" aria-label="Exercise type">
+          <button class="ex-tab active" aria-pressed="true" onclick="switchTab('fill_blank', this)">Fill blank</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('dictation', this)">Dictation</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('loop_drill', this)">Loop drill</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('true_false', this)">True/False</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('sentence_ordering', this)">Word order</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('vocabulary', this)">Vocabulary</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('qa', this)">Q&amp;A</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('grammar', this)">Grammar</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('conversation', this)">Conversation</button>
+          <button class="ex-tab" aria-pressed="false" onclick="switchTab('pronunciation', this)">Pronunciation</button>
         </div>
         <div class="ex-content" id="exContent">
           <div class="empty-state">Click "Generate" to create exercises from this video.</div>
@@ -646,11 +200,24 @@
     </div>
   </div>
 
-</div><!-- /app -->
+</main><!-- /app -->
 
 <!-- YouTube IFrame API -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+// Display preference is local to this device; session content is unchanged.
+const readingSizeControl = document.getElementById('readingSize');
+function applyReadingSize(value) {
+  const size = ['16', '18', '20'].includes(value) ? value : '16';
+  document.documentElement.style.fontSize = size + 'px';
+  readingSizeControl.value = size;
+}
+try { applyReadingSize(localStorage.getItem('shadowlab-reading-size')); } catch (_) {}
+readingSizeControl.addEventListener('change', () => {
+  applyReadingSize(readingSizeControl.value);
+  try { localStorage.setItem('shadowlab-reading-size', readingSizeControl.value); } catch (_) {}
+});
+
 // ── Config ────────────────────────────────────────────────────────────────────
 const BACKEND = 'https://shadowing-app-backend.onrender.com';
 
@@ -760,7 +327,7 @@ async function loadVideo() {
     currentSessionId = null; // reset sessione corrente
     document.getElementById('exercisesPanel').classList.remove('show');
     document.getElementById('exContent').innerHTML = '<div class="empty-state">Click "Generate" to create exercises from this video.</div>';
-    document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ex-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
     document.querySelector('.ex-tab').classList.add('active');
     currentExType = 'fill_blank';
 
@@ -797,6 +364,7 @@ async function loadVideo() {
       const firstType = Object.keys(exerciseCache)[0];
       if (firstType) {
         document.getElementById('exercisesPanel').classList.add('show');
+  updateExerciseToggle(true);
         // Attiva il tab corrispondente
         document.querySelectorAll('.ex-tab').forEach(btn => {
           btn.classList.toggle('active', btn.getAttribute('onclick').includes(firstType));
@@ -818,7 +386,9 @@ function renderTranscript() {
   const list = document.getElementById('transcriptList');
   list.innerHTML = '';
   transcript.forEach((seg, i) => {
-    const div = document.createElement('div');
+    const div = document.createElement('button');
+    div.type = 'button';
+    div.setAttribute('aria-label', `Play and repeat at ${formatTime(seg.start)}: ${seg.text}`);
     div.className = 'transcript-line fade-in';
     div.dataset.index = i;
     div.innerHTML = `
@@ -848,6 +418,7 @@ function setActiveLine(idx) {
   const items = document.querySelectorAll('.transcript-line');
   items.forEach((el, i) => {
     el.classList.toggle('active', i === idx);
+    if (i === idx) el.setAttribute('aria-current', 'true'); else el.removeAttribute('aria-current');
     if (i === idx) {
       // Scroll solo verticale dentro il pannello transcript, non l'intera pagina
       const list = document.getElementById('transcriptList');
@@ -873,7 +444,7 @@ async function addVocabInput(existingData) {
   row.id = 'vocabInputRow';
   row.style.cssText = 'grid-column:1/-1;display:flex;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:4px;';
   row.innerHTML = `
-    <input type="text" id="vocabCustomInput" placeholder="Add a word or phrase… e.g. you ruled the roost" style="flex:1;font-size:0.82rem;padding:8px 12px">
+    <input type="text" id="vocabCustomInput" aria-label="Add a vocabulary word or phrase" placeholder="Add a word or phrase… e.g. you ruled the roost" style="flex:1;font-size:0.82rem;padding:8px 12px">
     <button id="vocabAddBtn" style="padding:8px 14px;font-size:0.8rem">+ Add</button>
   `;
   c.appendChild(row);
@@ -917,6 +488,7 @@ async function addVocabInput(existingData) {
 
 function updateLoopBtn() {
   const btn = document.getElementById('loopBtn');
+  btn.setAttribute('aria-pressed', String(loopActive && loopLine !== null));
   if (loopActive && loopLine !== null) {
     btn.style.background = 'var(--accent)';
     btn.style.color = '#ffffff';
@@ -967,19 +539,28 @@ function seekRelative(delta) {
 
 function setSpeed(rate, btn) {
   if (player) player.setPlaybackRate(rate);
-  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.speed-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
 }
 
 // ── Exercises ─────────────────────────────────────────────────────────────────
 function toggleExercises() {
-  document.getElementById('exercisesPanel').classList.toggle('show');
+  const open = document.getElementById('exercisesPanel').classList.toggle('show');
+  updateExerciseToggle(open);
+}
+
+function updateExerciseToggle(open) {
+  const button = document.getElementById('exToggleBtn');
+  button.setAttribute('aria-expanded', String(open));
+  button.textContent = open ? 'Hide exercises' : 'Show exercises';
 }
 
 function switchTab(type, btn) {
   currentExType = type;
-  document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ex-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   if (exerciseCache[type]) { renderExercises(exerciseCache[type], type); }
   else { document.getElementById('exContent').innerHTML = '<div class="empty-state">Click "Generate" to create exercises.</div>'; }
 }
@@ -990,7 +571,8 @@ async function generateExercises() {
   btn.disabled = true;
   btn.textContent = 'Generating…';
   document.getElementById('exercisesPanel').classList.add('show');
-  document.getElementById('exContent').innerHTML = '<div class="empty-state">⏳ Asking Claude…</div>';
+  updateExerciseToggle(true);
+  document.getElementById('exContent').innerHTML = '<div class="empty-state">Preparing your exercises…</div>';
 
   try {
     const res = await fetch(`${BACKEND}/api/exercises`, {
@@ -1039,6 +621,7 @@ function renderExercises(data, type) {
       <div style="font-size:0.82rem;margin-top:6px;color:var(--text-dim)">${data.explanation || ''}</div>
       ${subItems}
     </div>`;
+    addAnswerButtons(c);
     return;
   }
 
@@ -1048,8 +631,7 @@ function renderExercises(data, type) {
   exercises.forEach(ex => {
     const div = document.createElement('div');
     div.className = 'ex-item fade-in';
-    div.style.cursor = 'pointer';
-    div.title = 'Tap to reveal answer';
+
 
     if (type === 'fill_blank') {
       div.innerHTML = `
@@ -1061,16 +643,8 @@ function renderExercises(data, type) {
       div.innerHTML = `
         <div class="ex-sentence" style="margin-bottom:6px">🎧 Listen and write</div>
         <div class="ex-meta" style="margin-bottom:8px">${ex.difficulty || ''}${ex.focus ? ' · ' + ex.focus : ''}</div>
-        <button id="${dictId}" style="padding:4px 12px;font-size:0.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border)">Show answer</button>
+
         <div class="ex-answer" id="ans_${dictId}" style="display:none;margin-top:6px">✓ ${ex.text}</div>`;
-      setTimeout(() => {
-        const btn = document.getElementById(dictId);
-        if (btn) btn.addEventListener('click', () => {
-          const ans = document.getElementById('ans_' + dictId);
-          if (ans.style.display === 'none') { ans.style.display = 'block'; btn.textContent = 'Hide'; }
-          else { ans.style.display = 'none'; btn.textContent = 'Show answer'; }
-        });
-      }, 50);
     } else if (type === 'loop_drill') {
       const stress = (ex.stress_words || []).map(w => `<span class="stress-tag">${w}</span>`).join('');
       const drillId = 'drill_' + Math.random().toString(36).substr(2,6);
@@ -1171,24 +745,27 @@ function renderExercises(data, type) {
         <div style="margin-top:4px;font-size:0.78rem;color:var(--accent2)">Tip: ${ex.tip}</div>`;
     }
     c.appendChild(div);
-    // Tap to reveal answer
-    const answer = div.querySelector('.ex-answer');
-    if (answer) {
-      answer.style.display = 'none';
-      const hint = document.createElement('div');
-      hint.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin-top:6px';
-      hint.textContent = '👆 Tap to reveal';
-      div.appendChild(hint);
-      div.addEventListener('click', () => {
-        if (answer.style.display === 'none') {
-          answer.style.display = 'block';
-          hint.textContent = '👆 Tap to hide';
-        } else {
-          answer.style.display = 'none';
-          hint.textContent = '👆 Tap to reveal';
-        }
-      });
-    }
+    addAnswerButtons(div);
+  });
+}
+
+function addAnswerButtons(container) {
+  container.querySelectorAll('.ex-answer').forEach(answer => {
+    answer.style.display = 'none';
+    answer.id = answer.id || 'answer_' + Math.random().toString(36).slice(2);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'answer-toggle';
+    button.textContent = 'Show answer';
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-controls', answer.id);
+    button.addEventListener('click', () => {
+      const open = answer.style.display === 'none';
+      answer.style.display = open ? 'block' : 'none';
+      button.setAttribute('aria-expanded', String(open));
+      button.textContent = open ? 'Hide answer' : 'Show answer';
+    });
+    answer.after(button);
   });
 }
 
@@ -1283,11 +860,12 @@ function renderSessions(sessions) {
     div.innerHTML = `
       <div class="session-dot"></div>
       <div class="session-info">
-        <div class="session-title">${s.video_title || s.video_id}</div>
+        <button class="session-title session-open" type="button">${s.video_title || s.video_id}</button>
         <div class="session-meta">${s.student_name} · ${date}</div>
       </div>
       <button class="del-btn" data-id="${s.id}" style="background:transparent;border:none;color:var(--text-dim);font-size:1rem;padding:4px 8px;cursor:pointer;flex-shrink:0" title="Delete">🗑</button>
     `;
+    div.querySelector('.del-btn').setAttribute('aria-label', 'Delete session: ' + (s.video_title || s.video_id));
     div.querySelector('.del-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!confirm('Delete this session?')) return;
@@ -1401,7 +979,7 @@ async function loadSessionsPreview(student) {
         div.innerHTML = `
           <div class="session-dot"></div>
           <div class="session-info">
-            <div class="session-title">${s.video_title || s.video_id}</div>
+            <button class="session-title session-open" type="button">${s.video_title || s.video_id}</button>
             <div class="session-meta">${date}${s.notes ? ' · ' + s.notes.substring(0,40) : ''}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
@@ -1415,7 +993,8 @@ async function loadSessionsPreview(student) {
           pendingSessionId = s.id;
           loadVideo();
         });
-        div.querySelector('.del-btn').addEventListener('click', async (e) => {
+        div.querySelector('.del-btn').setAttribute('aria-label', 'Delete session: ' + (s.video_title || s.video_id));
+    div.querySelector('.del-btn').addEventListener('click', async (e) => {
           e.stopPropagation();
           if (!confirm('Delete this session?')) return;
           try {
@@ -1432,3 +1011,4 @@ async function loadSessionsPreview(student) {
 </script>
 </body>
 </html>
+
